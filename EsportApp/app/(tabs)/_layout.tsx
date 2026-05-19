@@ -20,7 +20,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Accueil',
+          title: 'Lobby',
           tabBarIcon: ({ color, focused }) => (
             <MaterialCommunityIcons
               name={focused ? 'home' : 'home-outline'}
