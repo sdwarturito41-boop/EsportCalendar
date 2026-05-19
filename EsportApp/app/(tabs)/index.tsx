@@ -121,10 +121,9 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.hero}>
-          <View style={styles.wordmarkRow}>
-            <Text variant="display.big" style={styles.wordmark}>LOBBY</Text>
-            <Text variant="display.big" tone="accent" style={styles.wordmark}>.</Text>
-          </View>
+          <Text variant="display.big" style={styles.wordmark}>
+            LOBBY<Text variant="display.big" tone="accent">.</Text>
+          </Text>
           <Text variant="ui.body" tone="muted">Your esports companion</Text>
         </View>
 
@@ -210,7 +209,6 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.lg,
     gap: 4,
   },
-  wordmarkRow: { flexDirection: 'row', alignItems: 'center' },
   wordmark: { lineHeight: 48 },
   section: {
     paddingHorizontal: Spacing.lg + 4,
