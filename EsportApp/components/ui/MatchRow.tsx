@@ -47,6 +47,7 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
         <Text variant="ui.teamName" numberOfLines={1} style={styles.name}>
           {match.opponent1_name || 'TBD'}
         </Text>
+        {isLive && <LiveChip />}
         {showScore ? (
           <Text variant="display.score" tone={winner === 2 ? 'muted' : 'primary'}>
             {match.opponent1_score}
@@ -66,11 +67,6 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
           </Text>
         )}
       </View>
-      {isLive && (
-        <View style={styles.liveContainer}>
-          <LiveChip />
-        </View>
-      )}
     </Pressable>
   );
 };
@@ -85,15 +81,11 @@ const styles = StyleSheet.create({
   teamRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44,
+    height: 40,
     gap: Spacing.md,
   },
   name: {
     flex: 1,
     color: Colors.text.primary,
-  },
-  liveContainer: {
-    paddingTop: Spacing.xs,
-    paddingBottom: Spacing.sm,
   },
 });
