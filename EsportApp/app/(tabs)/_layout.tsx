@@ -17,7 +17,19 @@ export default function TabLayout() {
         tabBarItemStyle: styles.tabBarItem,
       }}
     >
-      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Accueil',
+          tabBarIcon: ({ color, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'home' : 'home-outline'}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="matchs"
         options={{
