@@ -17,6 +17,7 @@ import { Colors, Spacing, Radii } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
 import { TeamLogo } from '@/components/ui/TeamLogo';
 import { LiveChip } from '@/components/ui/LiveChip';
+import { StreamEmbed } from '@/components/ui/StreamEmbed';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -158,6 +159,7 @@ export default function MatchDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        {isLive && matchData.stream_url && <StreamEmbed url={matchData.stream_url} />}
         <View style={styles.headerTop}>
           <Pressable style={styles.backButton} onPress={() => router.back()} hitSlop={8}>
             <MaterialCommunityIcons name="arrow-left" size={22} color={Colors.text.primary} />
