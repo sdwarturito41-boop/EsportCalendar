@@ -13,6 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
+import { Wordmark } from '@/components/ui/Wordmark';
 import { LiveChip } from '@/components/ui/LiveChip';
 import { FeaturedMatchCard } from '@/components/ui/FeaturedMatchCard';
 import { CompactMatchCard } from '@/components/ui/CompactMatchCard';
@@ -121,9 +122,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.hero}>
-          <Text variant="display.big" style={styles.wordmark}>
-            LOBBY<Text variant="display.big" tone="accent">.</Text>
-          </Text>
+          <Wordmark size="big" />
           <Text variant="ui.body" tone="muted">Your esports companion</Text>
         </View>
 
@@ -209,7 +208,6 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.lg,
     gap: 4,
   },
-  wordmark: { lineHeight: 48 },
   section: {
     paddingHorizontal: Spacing.lg + 4,
     paddingTop: Spacing.md,

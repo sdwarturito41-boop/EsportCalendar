@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Colors, Spacing, Radii } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
+import { Wordmark } from '@/components/ui/Wordmark';
 import { Surface } from '@/components/ui/Surface';
 
 let handlerSet = false;
@@ -56,7 +57,7 @@ export default function ProfilScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text variant="display.wordmark">PROFIL</Text>
+        <Wordmark />
       </View>
 
       <ScrollView

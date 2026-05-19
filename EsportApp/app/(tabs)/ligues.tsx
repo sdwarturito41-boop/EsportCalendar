@@ -3,12 +3,13 @@ import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
+import { Wordmark } from '@/components/ui/Wordmark';
 
 export default function LiguesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text variant="display.wordmark">LIGUES</Text>
+        <Wordmark />
       </View>
       <View style={styles.empty}>
         <MaterialCommunityIcons name="trophy-outline" size={56} color={Colors.text.muted} />

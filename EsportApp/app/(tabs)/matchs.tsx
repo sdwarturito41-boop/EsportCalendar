@@ -12,6 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
+import { Wordmark } from '@/components/ui/Wordmark';
 import { MatchRow, MatchRowMatch } from '@/components/ui/MatchRow';
 import { LeagueHeader } from '@/components/ui/LeagueHeader';
 import { FilterTabs, FilterKey } from '@/components/ui/FilterTabs';
@@ -149,7 +150,7 @@ export default function MatchsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text variant="display.wordmark">OVERTIME</Text>
+        <Wordmark />
         <Pressable hitSlop={8}>
           <MaterialCommunityIcons name="calendar-blank" size={20} color={Colors.text.primary} />
         </Pressable>
