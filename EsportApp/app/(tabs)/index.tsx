@@ -121,7 +121,18 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.hero}>
-          <Text variant="display.big" style={styles.wordmark}>OVERTIME</Text>
+          <View style={styles.wordmarkRow}>
+            <Text variant="display.big" style={styles.wordmark}>LO</Text>
+            <Text variant="display.big" tone="accent" style={styles.wordmark}>B</Text>
+            <Text
+              variant="display.big"
+              tone="accent"
+              style={[styles.wordmark, styles.mirroredB]}
+            >
+              B
+            </Text>
+            <Text variant="display.big" style={styles.wordmark}>Y</Text>
+          </View>
           <Text variant="ui.body" tone="muted">Your esports companion</Text>
         </View>
 
@@ -207,7 +218,9 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.lg,
     gap: 4,
   },
+  wordmarkRow: { flexDirection: 'row', alignItems: 'center' },
   wordmark: { lineHeight: 48 },
+  mirroredB: { transform: [{ scaleX: -1 }] },
   section: {
     paddingHorizontal: Spacing.lg + 4,
     paddingTop: Spacing.md,
