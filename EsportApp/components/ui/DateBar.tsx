@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from './Text';
@@ -22,16 +22,30 @@ const formatLabel = (date: Date): string => {
   return `${DAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 };
 
+const addDays = (date: Date, n: number) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 export interface DateBarProps {
   date: Date;
-  onPress?: () => void;
+  onChange: (date: Date) => void;
 }
 
-export const DateBar: React.FC<DateBarProps> = ({ date, onPress }) => (
-  <Pressable onPress={onPress} style={styles.row}>
-    <Text variant="ui.label" tone="primary">{formatLabel(date)}</Text>
-    <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.text.muted} />
-  </Pressable>
+export const DateBar: React.FC<DateBarProps> = ({ date, onChange }) => (
+  <View style={styles.row}>
+    <Pressable onPress={() => onChange(addDays(date, -1))} hitSlop={8} style={styles.iconBtn}>
+      <MaterialCommunityIcons name="chevron-left" size={22} color={Colors.text.primary} />
+    </Pressable>
+    <Pressable onPress={() => onChange(new Date(new Date().setHours(0, 0, 0, 0)))} style={styles.label}>
+      <Text variant="ui.label" tone="primary">{formatLabel(date)}</Text>
+    </Pressable>
+    <Pressable onPress={() => onChange(addDays(date, 1))} hitSlop={8} style={styles.iconBtn}>
+      <MaterialCommunityIcons name="chevron-right" size={22} color={Colors.text.primary} />
+    </Pressable>
+  </View>
 );
 
 const styles = StyleSheet.create({
@@ -40,6 +54,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md + 2,
+    paddingVertical: Spacing.md,
+  },
+  iconBtn: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    flex: 1,
+    alignItems: 'center',
   },
 });

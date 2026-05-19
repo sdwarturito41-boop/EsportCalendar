@@ -158,7 +158,7 @@ export default function MatchsScreen() {
       <FilterTabs value={filter} onChange={setFilter} />
       <View style={styles.hairline} />
 
-      <DateBar date={selectedDate} onPress={() => { /* TODO: date picker modal */ }} />
+      <DateBar date={selectedDate} onChange={setSelectedDate} />
       <View style={styles.hairline} />
 
       {loading ? (
