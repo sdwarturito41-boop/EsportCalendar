@@ -181,6 +181,7 @@ export default function MatchsScreen() {
                 name={group.leagueName}
                 imageUrl={group.imageUrl}
                 isFavorite={favorites.has(group.leagueName)}
+                hasLive={group.matches.some((m) => m.status === 'running')}
                 onToggleFavorite={() => toggleFavorite(group.leagueName)}
               />
               {group.matches.map((m) => (

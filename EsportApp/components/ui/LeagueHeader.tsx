@@ -4,11 +4,13 @@ import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Spacing, Radii } from '@/constants/theme';
 import { Text } from './Text';
+import { LiveChip } from './LiveChip';
 
 export interface LeagueHeaderProps {
   name: string;
   imageUrl?: string | null;
   isFavorite?: boolean;
+  hasLive?: boolean;
   onToggleFavorite?: () => void;
 }
 
@@ -16,6 +18,7 @@ export const LeagueHeader: React.FC<LeagueHeaderProps> = ({
   name,
   imageUrl,
   isFavorite = false,
+  hasLive = false,
   onToggleFavorite,
 }) => {
   return (
@@ -28,6 +31,7 @@ export const LeagueHeader: React.FC<LeagueHeaderProps> = ({
       <Text variant="ui.caption" tone="primary" numberOfLines={1} style={styles.name}>
         {name}
       </Text>
+      {hasLive && <LiveChip />}
       <Pressable onPress={onToggleFavorite} hitSlop={8} style={styles.star}>
         <MaterialCommunityIcons
           name={isFavorite ? 'star' : 'star-outline'}

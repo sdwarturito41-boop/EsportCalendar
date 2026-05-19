@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from './Text';
 import { TeamLogo } from './TeamLogo';
-import { LiveChip } from './LiveChip';
 
 export interface MatchRowMatch {
   id: string;
@@ -30,8 +29,7 @@ export interface MatchRowProps {
 export const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
   const router = useRouter();
   const isFinished = match.status === 'finished';
-  const isLive = match.status === 'running';
-  const showScore = isFinished || isLive;
+  const showScore = isFinished || match.status === 'running';
   const winner = isFinished
     ? match.opponent1_score > match.opponent2_score
       ? 1
@@ -47,7 +45,6 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
         <Text variant="ui.teamName" numberOfLines={1} style={styles.name}>
           {match.opponent1_name || 'TBD'}
         </Text>
-        {isLive && <LiveChip />}
         {showScore ? (
           <Text variant="display.score" tone={winner === 2 ? 'muted' : 'primary'}>
             {match.opponent1_score}
