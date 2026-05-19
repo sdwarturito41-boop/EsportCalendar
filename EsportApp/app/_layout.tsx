@@ -4,32 +4,50 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import 'react-native-reanimated';
 
-import { Fonts } from '@/constants/theme';
+import { Fonts, Colors } from '@/constants/theme';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 export default function RootLayout() {
-  const [loaded] = useFonts(Fonts);
+  const [loaded, error] = useFonts(Fonts);
 
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
-  }, [loaded]);
+    if (error) console.warn('[OVERTIME] Font load error:', error);
+  }, [error]);
 
-  if (!loaded) return null;
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [loaded, error]);
+
+  // Safety net : si les fonts traînent plus de 3s, on force le hide
+  useEffect(() => {
+    const t = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
-    <ThemeProvider value={DarkTheme}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#08080B' } }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="match/[id]" />
-      </Stack>
-      <StatusBar style="light" />
-    </ThemeProvider>
+    <View style={{ flex: 1, backgroundColor: Colors.bg.page }}>
+      <ThemeProvider value={DarkTheme}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.bg.page },
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="match/[id]" />
+        </Stack>
+        <StatusBar style="light" />
+      </ThemeProvider>
+    </View>
   );
 }
