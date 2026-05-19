@@ -164,9 +164,12 @@ export default function MatchDetailScreen() {
           <Pressable style={styles.backButton} onPress={() => router.back()} hitSlop={8}>
             <MaterialCommunityIcons name="arrow-left" size={22} color={Colors.text.primary} />
           </Pressable>
-          <Text variant="ui.label" tone="muted" numberOfLines={1} style={styles.tournamentText}>
-            {matchData.tournaments?.name}
-          </Text>
+          <View style={styles.headerCenter}>
+            <Text variant="ui.label" tone="muted" numberOfLines={1} style={styles.tournamentText}>
+              {matchData.tournaments?.name}
+            </Text>
+            {isLive && <LiveChip />}
+          </View>
           <View style={{ width: 36 }} />
         </View>
 
@@ -193,7 +196,6 @@ export default function MatchDetailScreen() {
             ) : (
               <Text variant="display.big" tone="primary">{timeDisplay}</Text>
             )}
-            {isLive && <View style={styles.liveWrap}><LiveChip /></View>}
           </View>
 
           <View style={styles.teamHero}>
@@ -373,7 +375,14 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
     paddingBottom: Spacing.sm,
   },
-  tournamentText: { flex: 1, textAlign: 'center' },
+  headerCenter: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+  },
+  tournamentText: { flexShrink: 1, textAlign: 'center' },
   scoreSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -387,7 +396,6 @@ const styles = StyleSheet.create({
   scoreCenter: { minWidth: 110, alignItems: 'center', gap: Spacing.xs },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
   scoreSep: { marginHorizontal: Spacing.sm },
-  liveWrap: { marginTop: Spacing.xs },
   tabsContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,

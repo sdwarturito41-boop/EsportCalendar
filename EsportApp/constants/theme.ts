@@ -15,7 +15,7 @@ export const Colors = {
     indigo: '#5C5CE8',
   },
   semantic: {
-    live: '#1DB86E',
+    live: '#FF3B30',
     loss: '#E8404A',
   },
 } as const;
