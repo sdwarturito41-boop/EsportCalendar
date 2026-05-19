@@ -122,12 +122,8 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.hero}>
           <View style={styles.wordmarkRow}>
-            <Text variant="display.big" style={styles.wordmark}>LO</Text>
-            <Text variant="display.big" tone="accent" style={styles.wordmark}>B</Text>
-            <View style={styles.mirroredB}>
-              <Text variant="display.big" tone="accent" style={styles.wordmark}>B</Text>
-            </View>
-            <Text variant="display.big" style={styles.wordmark}>Y</Text>
+            <Text variant="display.big" style={styles.wordmark}>LOBBY</Text>
+            <Text variant="display.big" tone="accent" style={styles.wordmark}>.</Text>
           </View>
           <Text variant="ui.body" tone="muted">Your esports companion</Text>
         </View>
@@ -216,7 +212,6 @@ const styles = StyleSheet.create({
   },
   wordmarkRow: { flexDirection: 'row', alignItems: 'center' },
   wordmark: { lineHeight: 48 },
-  mirroredB: { transform: [{ scaleX: -1 }] },
   section: {
     paddingHorizontal: Spacing.lg + 4,
     paddingTop: Spacing.md,
