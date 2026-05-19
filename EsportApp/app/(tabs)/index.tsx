@@ -124,13 +124,9 @@ export default function HomeScreen() {
           <View style={styles.wordmarkRow}>
             <Text variant="display.big" style={styles.wordmark}>LO</Text>
             <Text variant="display.big" tone="accent" style={styles.wordmark}>B</Text>
-            <Text
-              variant="display.big"
-              tone="accent"
-              style={[styles.wordmark, styles.mirroredB]}
-            >
-              B
-            </Text>
+            <View style={styles.mirroredB}>
+              <Text variant="display.big" tone="accent" style={styles.wordmark}>B</Text>
+            </View>
             <Text variant="display.big" style={styles.wordmark}>Y</Text>
           </View>
           <Text variant="ui.body" tone="muted">Your esports companion</Text>
