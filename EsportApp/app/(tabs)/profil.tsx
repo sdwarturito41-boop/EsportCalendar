@@ -1,24 +1,28 @@
 import React from 'react';
 import { View, StyleSheet, SafeAreaView, ScrollView, Pressable, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 
 import { Colors, Spacing, Radii } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
 import { Surface } from '@/components/ui/Surface';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+let handlerSet = false;
 
 export default function ProfilScreen() {
   const requestPermissions = async () => {
+    const Notifications = await import('expo-notifications');
+    const Device = await import('expo-device');
+    if (!handlerSet) {
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowBanner: true,
+          shouldShowList: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+        }),
+      });
+      handlerSet = true;
+    }
     if (!Device.isDevice) {
       Alert.alert('Erreur', 'Utilisez un appareil physique pour les notifications.');
       return;
@@ -37,6 +41,7 @@ export default function ProfilScreen() {
   };
 
   const scheduleTestNotification = async () => {
+    const Notifications = await import('expo-notifications');
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'MATCH EN DIRECT',
