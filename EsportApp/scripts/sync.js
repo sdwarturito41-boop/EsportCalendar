@@ -48,6 +48,9 @@ const mapStatus = (s) => {
   return 'not_started';
 };
 
+// Préfère la variante claire (dark_mode_image_url) pour qu'elle ressorte sur fond sombre.
+const pickLogo = (team) => team?.dark_mode_image_url || team?.image_url || null;
+
 const mapMatch = (m) => {
   const op1 = m.opponents?.[0]?.opponent;
   const op2 = m.opponents?.[1]?.opponent;
@@ -61,10 +64,10 @@ const mapMatch = (m) => {
     status: mapStatus(m.status),
     best_of: m.number_of_games || 1,
     opponent1_name: op1?.name || 'TBD',
-    opponent1_logo: op1?.image_url || null,
+    opponent1_logo: pickLogo(op1),
     opponent1_score: score1,
     opponent2_name: op2?.name || 'TBD',
-    opponent2_logo: op2?.image_url || null,
+    opponent2_logo: pickLogo(op2),
     opponent2_score: score2,
     stream_url: stream?.raw_url || null,
     updated_at: new Date().toISOString(),

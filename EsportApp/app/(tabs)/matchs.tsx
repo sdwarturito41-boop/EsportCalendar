@@ -186,7 +186,6 @@ export default function MatchsScreen() {
               {group.matches.map((m) => (
                 <MatchRow key={m.id} match={m} />
               ))}
-              <View style={styles.hairline} />
             </View>
           ))}
         </ScrollView>
