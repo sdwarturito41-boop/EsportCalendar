@@ -22,6 +22,7 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ value, onChange }) => (
   <ScrollView
     horizontal
     showsHorizontalScrollIndicator={false}
+    style={styles.scroll}
     contentContainerStyle={styles.container}
   >
     {OPTIONS.map((opt) => {
@@ -39,8 +40,13 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ value, onChange }) => (
 );
 
 const styles = StyleSheet.create({
+  scroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   container: {
     paddingHorizontal: Spacing.xs,
+    alignItems: 'flex-start',
   },
   tab: {
     paddingHorizontal: Spacing.md + 2,
