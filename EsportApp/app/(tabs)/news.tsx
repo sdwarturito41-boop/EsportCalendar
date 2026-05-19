@@ -1,57 +1,38 @@
 import React from 'react';
-import { View, StyleSheet, Text, SafeAreaView, ScrollView } from 'react-native';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
+import { Colors, Spacing } from '@/constants/theme';
+import { Text } from '@/components/ui/Text';
 
 export default function NewsScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>ACTUS</Text>
-        </View>
-        <View style={styles.content}>
-          <MaterialCommunityIcons name="newspaper-variant-outline" size={64} color={Colors.text.tertiary} />
-          <Text style={styles.placeholder}>Suivez l'actualité esport ici prochainement.</Text>
-        </View>
-        <View style={styles.bottomPadding} />
-      </ScrollView>
+      <View style={styles.header}>
+        <Text variant="display.wordmark">ACTUS</Text>
+      </View>
+      <View style={styles.empty}>
+        <MaterialCommunityIcons name="newspaper-variant-outline" size={56} color={Colors.text.muted} />
+        <Text variant="ui.body" tone="muted" style={styles.placeholder}>
+          Suivez l'actualité esport ici prochainement.
+        </Text>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  scrollContent: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: Colors.bg.page },
   header: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.md,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: Colors.text.primary,
-    letterSpacing: 2,
-  },
-  content: {
-    paddingVertical: 100,
+  empty: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
-    gap: 16,
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.md,
   },
-  placeholder: {
-    color: Colors.text.secondary,
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  bottomPadding: {
-    height: 100,
-  },
+  placeholder: { textAlign: 'center' },
 });

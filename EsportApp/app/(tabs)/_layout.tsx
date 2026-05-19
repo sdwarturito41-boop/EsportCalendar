@@ -1,8 +1,8 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { StyleSheet, Platform, View } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
+import { Colors } from '@/constants/theme';
 
 export default function TabLayout() {
   return (
@@ -10,89 +10,59 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: Colors.accent.primary,
-        tabBarInactiveTintColor: Colors.text.tertiary,
+        tabBarActiveTintColor: Colors.accent.indigo,
+        tabBarInactiveTintColor: Colors.text.muted,
         tabBarShowLabel: true,
         tabBarLabelStyle: styles.tabBarLabel,
+        tabBarItemStyle: styles.tabBarItem,
       }}
     >
-      {/* Hide the default Expo index screen */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null,
-        }}
-      />
-
       <Tabs.Screen
         name="matchs"
         options={{
           title: 'Matchs',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialCommunityIcons 
-                name={focused ? "sword-cross" : "sword-cross"} 
-                size={focused ? 26 : 22} 
-                color={color} 
-              />
-            </View>
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="sword-cross" size={22} color={color} />
           ),
         }}
       />
-
       <Tabs.Screen
         name="ligues"
         options={{
           title: 'Ligues',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialCommunityIcons 
-                name={focused ? "trophy" : "trophy-outline"} 
-                size={focused ? 26 : 22} 
-                color={color} 
-              />
-            </View>
+            <MaterialCommunityIcons
+              name={focused ? 'trophy' : 'trophy-outline'}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
-
       <Tabs.Screen
         name="news"
         options={{
           title: 'Actus',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialCommunityIcons 
-                name={focused ? "newspaper-variant" : "newspaper-variant-outline"} 
-                size={focused ? 26 : 22} 
-                color={color} 
-              />
-            </View>
+            <MaterialCommunityIcons
+              name={focused ? 'newspaper-variant' : 'newspaper-variant-outline'}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
-
       <Tabs.Screen
         name="profil"
         options={{
           title: 'Profil',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialCommunityIcons 
-                name={focused ? "account" : "account-outline"} 
-                size={focused ? 26 : 22} 
-                color={color} 
-              />
-            </View>
+            <MaterialCommunityIcons
+              name={focused ? 'account' : 'account-outline'}
+              size={22}
+              color={color}
+            />
           ),
-        }}
-      />
-
-      {/* Hide the default Expo explore screen */}
-      <Tabs.Screen
-        name="explore"
-        options={{
-          href: null,
         }}
       />
     </Tabs>
@@ -101,34 +71,22 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#1E293B', // Dark Slate
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 24 : 16,
-    left: 16,
-    right: 16,
-    height: 68,
-    borderRadius: 24,
-    borderTopWidth: 0,
-    paddingBottom: 8,
+    backgroundColor: Colors.bg.page,
+    borderTopColor: Colors.border.subtle,
+    borderTopWidth: 1,
+    height: Platform.OS === 'ios' ? 84 : 60,
     paddingTop: 8,
-    // Shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    // Shadow for Android
-    elevation: 12,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  tabBarItem: {
+    gap: 2,
   },
   tabBarLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 2,
-    textTransform: 'uppercase',
+    fontFamily: 'Geist-Bold',
+    fontSize: 10,
     letterSpacing: 0.5,
-  },
-  activeIconContainer: {
-    // Optional: add a subtle glow or background to the active icon
-    alignItems: 'center',
-    justifyContent: 'center',
+    textTransform: 'uppercase',
   },
 });

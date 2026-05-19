@@ -1,187 +1,141 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, Text, SafeAreaView, ScrollView, Pressable, Alert, Platform } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, SafeAreaView, ScrollView, Pressable, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
-// Configuration pour afficher les notifications même si l'app est ouverte
+import { Colors, Spacing, Radii } from '@/constants/theme';
+import { Text } from '@/components/ui/Text';
+import { Surface } from '@/components/ui/Surface';
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
 
 export default function ProfilScreen() {
-  
-  // Demander la permission au chargement ou via un bouton
   const requestPermissions = async () => {
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') {
-        Alert.alert('Erreur', 'Les notifications ne sont pas autorisées !');
-        return false;
-      }
-      Alert.alert('Succès', 'Notifications autorisées ✅');
-      return true;
-    } else {
+    if (!Device.isDevice) {
       Alert.alert('Erreur', 'Utilisez un appareil physique pour les notifications.');
-      return false;
+      return;
     }
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    let finalStatus = existing;
+    if (existing !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      Alert.alert('Erreur', "Les notifications ne sont pas autorisées.");
+      return;
+    }
+    Alert.alert('OK', 'Notifications autorisées.');
   };
 
-  // Envoyer une notification de test immédiate
   const scheduleTestNotification = async () => {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "🔥 MATCH EN DIRECT !",
-        body: "G2 Esports vs Team Vitality vient de commencer !",
+        title: 'MATCH EN DIRECT',
+        body: 'G2 Esports vs Team Vitality vient de commencer.',
         data: { matchId: 123 },
         sound: true,
       },
-      trigger: null, // Immédiat
+      trigger: null,
     });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>PROFIL</Text>
-        </View>
+      <View style={styles.header}>
+        <Text variant="display.wordmark">PROFIL</Text>
+      </View>
 
-        <View style={styles.content}>
-          <View style={styles.avatarPlaceholder}>
-            <MaterialCommunityIcons name="account" size={64} color={Colors.text.tertiary} />
-          </View>
-          <Text style={styles.userName}>Utilisateur Esport</Text>
-          
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>CENTRE DE NOTIFICATIONS</Text>
-            
-            <Pressable 
-              style={({ pressed }) => [styles.button, styles.buttonSecondary, pressed && { opacity: 0.8 }]}
-              onPress={requestPermissions}
-            >
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.avatar}>
+          <MaterialCommunityIcons name="account" size={56} color={Colors.text.muted} />
+        </View>
+        <Text variant="ui.title" tone="primary" style={{ marginTop: Spacing.md }}>
+          Utilisateur Esport
+        </Text>
+
+        <View style={styles.section}>
+          <Text variant="ui.label" tone="muted" style={styles.sectionTitle}>
+            Notifications
+          </Text>
+          <Pressable onPress={requestPermissions} style={({ pressed }) => [pressed && styles.pressed]}>
+            <Surface level="surface" radius="md" padding="md" bordered style={styles.row}>
               <MaterialCommunityIcons name="shield-check-outline" size={20} color={Colors.text.primary} />
-              <Text style={styles.buttonText}>Autoriser les alertes</Text>
-            </Pressable>
-
-            <Pressable 
-              style={({ pressed }) => [styles.button, styles.buttonPrimary, pressed && { opacity: 0.8 }]}
-              onPress={scheduleTestNotification}
-            >
-              <MaterialCommunityIcons name="bell-ring-outline" size={20} color="white" />
-              <Text style={styles.buttonText}>Tester une alerte match</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PARAMÈTRES</Text>
-            <View style={styles.placeholderCard}>
-              <Text style={styles.placeholderText}>Plus d'options à venir...</Text>
-            </View>
-          </View>
+              <Text variant="ui.body" tone="primary" style={{ flex: 1 }}>
+                Autoriser les alertes
+              </Text>
+              <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.text.muted} />
+            </Surface>
+          </Pressable>
+          <Pressable onPress={scheduleTestNotification} style={({ pressed }) => [pressed && styles.pressed]}>
+            <Surface level="elevated" radius="md" padding="md" style={[styles.row, styles.rowAccent]}>
+              <MaterialCommunityIcons name="bell-ring-outline" size={20} color={Colors.text.primary} />
+              <Text variant="ui.body" tone="primary" style={{ flex: 1 }}>
+                Tester une alerte match
+              </Text>
+            </Surface>
+          </Pressable>
         </View>
-        <View style={styles.bottomPadding} />
+
+        <View style={styles.section}>
+          <Text variant="ui.label" tone="muted" style={styles.sectionTitle}>
+            Paramètres
+          </Text>
+          <Surface level="surface" radius="md" padding="lg" bordered style={styles.empty}>
+            <Text variant="ui.caption" tone="muted">Plus d'options à venir.</Text>
+          </Surface>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  scrollContent: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: Colors.bg.page },
   header: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: Colors.text.primary,
-    letterSpacing: 2,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.md,
   },
   content: {
-    paddingTop: 20,
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: 80,
   },
-  avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.background.secondary,
+  avatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: Colors.bg.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: Colors.text.primary,
-    marginBottom: 32,
+    marginTop: Spacing.lg,
   },
   section: {
     width: '100%',
-    marginBottom: 32,
+    marginTop: Spacing.xl,
+    gap: Spacing.sm,
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.text.tertiary,
-    letterSpacing: 1,
-    marginBottom: 16,
-    paddingLeft: 4,
-  },
-  button: {
+  sectionTitle: { paddingLeft: Spacing.xs, marginBottom: Spacing.xs },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 12,
-    marginBottom: 12,
+    gap: Spacing.md,
   },
-  buttonPrimary: {
-    backgroundColor: Colors.accent.primary,
+  rowAccent: {
+    backgroundColor: Colors.accent.indigo,
   },
-  buttonSecondary: {
-    backgroundColor: Colors.background.secondary,
-    borderWidth: 1,
-    borderColor: Colors.background.tertiary,
-  },
-  buttonText: {
-    color: Colors.text.primary,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  placeholderCard: {
-    padding: 20,
-    backgroundColor: Colors.background.secondary,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    borderColor: Colors.background.tertiary,
-  },
-  placeholderText: {
-    color: Colors.text.tertiary,
-    fontSize: 14,
-  },
-  bottomPadding: {
-    height: 120,
-  },
+  pressed: { opacity: 0.85 },
+  empty: { alignItems: 'center' },
 });

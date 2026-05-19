@@ -1,53 +1,50 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+  bg: {
+    page: '#08080B',
+    surface: '#161619',
+    elevated: '#1E1E24',
   },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+  border: {
+    subtle: '#2A2A30',
   },
-};
+  text: {
+    primary: '#F0F0F5',
+    muted: '#6A6A78',
+  },
+  accent: {
+    indigo: '#5C5CE8',
+  },
+  semantic: {
+    live: '#1DB86E',
+    loss: '#E8404A',
+  },
+} as const;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+const BEBAS = 'BebasNeue';
+const GEIST_MEDIUM = 'Geist-Medium';
+const GEIST_BOLD = 'Geist-Bold';
+
+export const Typo = {
+  display: {
+    score:    { fontFamily: BEBAS, fontSize: 20, letterSpacing: 0.5 },
+    time:     { fontFamily: BEBAS, fontSize: 16, letterSpacing: 0.5 },
+    wordmark: { fontFamily: BEBAS, fontSize: 28, letterSpacing: 3 },
+    big:      { fontFamily: BEBAS, fontSize: 48, letterSpacing: 1 },
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+  ui: {
+    title:    { fontFamily: GEIST_BOLD,   fontSize: 20, letterSpacing: -0.2 },
+    body:     { fontFamily: GEIST_MEDIUM, fontSize: 15 },
+    teamName: { fontFamily: GEIST_MEDIUM, fontSize: 15 },
+    label:    { fontFamily: GEIST_BOLD,   fontSize: 11, letterSpacing: 1 },
+    caption:  { fontFamily: GEIST_MEDIUM, fontSize: 12 },
   },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+} as const;
+
+export const Spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
+export const Radii = { sm: 6, md: 8, lg: 12, xl: 16, pill: 999 } as const;
+
+export const Fonts = {
+  [BEBAS]: require('../assets/fonts/BebasNeue-Regular.ttf'),
+  [GEIST_MEDIUM]: require('../assets/fonts/Geist-Medium.ttf'),
+  [GEIST_BOLD]: require('../assets/fonts/Geist-Bold.ttf'),
+} as const;
