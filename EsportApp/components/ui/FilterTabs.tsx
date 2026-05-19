@@ -44,7 +44,8 @@ const styles = StyleSheet.create({
   },
   tab: {
     paddingHorizontal: Spacing.md + 2,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 10,
     position: 'relative',
   },
   underline: {

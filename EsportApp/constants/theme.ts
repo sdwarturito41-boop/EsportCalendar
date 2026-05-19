@@ -32,11 +32,11 @@ export const Typo = {
     big:      { fontFamily: BEBAS, fontSize: 48, letterSpacing: 1 },
   },
   ui: {
-    title:    { fontFamily: GEIST_BOLD,   fontSize: 20, letterSpacing: -0.2 },
-    body:     { fontFamily: GEIST_MEDIUM, fontSize: 15 },
-    teamName: { fontFamily: GEIST_MEDIUM, fontSize: 15 },
-    label:    { fontFamily: GEIST_BOLD,   fontSize: 11, letterSpacing: 1 },
-    caption:  { fontFamily: GEIST_MEDIUM, fontSize: 12 },
+    title:    { fontFamily: GEIST_BOLD,   fontSize: 20, lineHeight: 24, letterSpacing: -0.2 },
+    body:     { fontFamily: GEIST_MEDIUM, fontSize: 15, lineHeight: 20 },
+    teamName: { fontFamily: GEIST_MEDIUM, fontSize: 15, lineHeight: 18 },
+    label:    { fontFamily: GEIST_BOLD,   fontSize: 11, lineHeight: 13, letterSpacing: 1 },
+    caption:  { fontFamily: GEIST_MEDIUM, fontSize: 12, lineHeight: 16 },
   },
 } as const;
 
