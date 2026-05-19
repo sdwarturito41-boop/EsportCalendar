@@ -24,8 +24,8 @@ Scope choisi : **foundations d'abord** — on livre les design tokens + un set d
 
 **Typographie**
 
-- Display (scores, wordmark) : **Bebas Neue** (Google Fonts, poids 400 unique)
-- UI (body, labels, titres) : **DM Sans** (Google Fonts, poids 500 / 600 / 700)
+- Display (wordmark, scores, temps) : **Bebas Neue** (Google Fonts, poids 400 unique). Fallback secondaire envisageable plus tard : Barlow Condensed.
+- UI (body, labels, titres, tags) : **Geist** (Vercel, open-source via Google Fonts, poids 500 et 700)
 - Aucun autre weight nulle part. Le `fontWeight: '900'` du code actuel disparaît — la verticalité du score vient de Bebas Neue, pas du weight.
 
 **Principes**
@@ -55,11 +55,12 @@ export const Typo = {
     fontFamily: 'BebasNeue',
     // Bebas Neue n'existe qu'en un poids (400). Ne pas surcharger fontWeight.
     score:    { fontSize: 20, letterSpacing: 0.5 },
+    time:     { fontSize: 16, letterSpacing: 0.5 },
     wordmark: { fontSize: 28, letterSpacing: 3 },
     big:      { fontSize: 48, letterSpacing: 1 },
   },
   ui: {
-    fontFamily: 'DMSans',
+    fontFamily: 'Geist',
     title:    { fontSize: 20, fontWeight: '700', letterSpacing: -0.2 },
     body:     { fontSize: 15, fontWeight: '500' },
     teamName: { fontSize: 15, fontWeight: '500' },
@@ -151,10 +152,13 @@ Le `•` est un petit carré 16×16 en `border.subtle` (placeholder pour un futu
 ### Setup technique
 
 **Fonts** — via `expo-font`
-- Fichiers : `assets/fonts/BebasNeue-Regular.ttf`, `DMSans-Medium.ttf`, `DMSans-Bold.ttf`
+- Fichiers : `assets/fonts/BebasNeue-Regular.ttf`, `Geist-Medium.ttf`, `Geist-Bold.ttf`
 - Le poids 500 (Medium) et 700 (Bold) suffisent pour toute l'UI ; aucun autre fichier nécessaire
+- Geist est disponible via Google Fonts ou directement sur vercel.com/font ; licence SIL Open Font (OK pour distribution dans l'app)
 - Préchargement dans `app/_layout.tsx` avec `useFonts({...})` + `SplashScreen.preventAutoHideAsync()` jusqu'à `loaded === true`
-- Les noms de famille dans `Typo` (`'BebasNeue'`, `'DMSans'`) doivent matcher les noms passés à `useFonts`
+- En React Native chaque poids = un alias distinct dans `useFonts`. On enregistre `'Geist-Medium'` et `'Geist-Bold'` puis `Typo.ui.body.fontFamily` = `'Geist-Medium'`, `Typo.ui.title.fontFamily` = `'Geist-Bold'`, etc.
+
+**Icônes** — `MaterialCommunityIcons` de `@expo/vector-icons` (déjà dans le projet). **Aucun emoji** dans l'app. Liste des icônes utilisées dans la refonte : `calendar-blank` (header date), `star`/`star-outline` (favori league), `chevron-right` (date bar), `sword-cross` (tab Matchs), `trophy`/`trophy-outline` (tab Ligues), `newspaper-variant`/`newspaper-variant-outline` (tab Actus), `account`/`account-outline` (tab Profil), `magnify` (recherche si réintroduite). Taille standard : 20px header, 16px in-row.
 
 **Rebrand** — `app.json`
 - `expo.name` : `"FotMob E-Sport"` → `"OVERTIME"`
