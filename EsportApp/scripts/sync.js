@@ -74,12 +74,22 @@ const mapMatch = (m) => {
   };
 };
 
+// Compose un nom complet : "EMEA: Stage 1 2026 · Group C" plutôt que juste "Group C".
+const composeTournamentName = (m) => {
+  const tName = m.tournament?.name?.trim();
+  const sName = m.serie?.full_name?.trim();
+  const lName = m.league?.name?.trim();
+  const main = sName || lName || 'Tournament';
+  if (!tName || main.toLowerCase().includes(tName.toLowerCase())) return main;
+  return `${main} · ${tName}`;
+};
+
 const mapTournament = (m) => {
   const t = m.tournament;
   if (!t) return null;
   return {
     id: String(t.id),
-    name: t.name,
+    name: composeTournamentName(m),
     game: 'valorant',
     tier: t.tier || null,
     image_url: m.league?.image_url || null,

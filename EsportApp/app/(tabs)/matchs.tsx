@@ -36,7 +36,7 @@ interface Match extends MatchRowMatch {
 
 interface TournamentGroup {
   leagueName: string;
-  stage: string;
+  imageUrl: string | null;
   tier: string;
   matches: Match[];
 }
@@ -100,7 +100,7 @@ export default function MatchsScreen() {
           const t = getTournament(matches[0]);
           return {
             leagueName,
-            stage: '',
+            imageUrl: t?.image_url || null,
             tier: (t?.tier || 'unranked').toLowerCase(),
             matches,
           };
@@ -179,7 +179,7 @@ export default function MatchsScreen() {
             <View key={group.leagueName}>
               <LeagueHeader
                 name={group.leagueName}
-                stage={group.stage}
+                imageUrl={group.imageUrl}
                 isFavorite={favorites.has(group.leagueName)}
                 onToggleFavorite={() => toggleFavorite(group.leagueName)}
               />
