@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
-import { Wordmark } from '@/components/ui/Wordmark';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { LiveChip } from '@/components/ui/LiveChip';
 import { FeaturedMatchCard } from '@/components/ui/FeaturedMatchCard';
 import { CompactMatchCard } from '@/components/ui/CompactMatchCard';
@@ -120,9 +120,9 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <PageHeader />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <View style={styles.hero}>
-          <Wordmark size="big" />
+        <View style={styles.intro}>
           <Text variant="ui.body" tone="muted">Your esports companion</Text>
         </View>
 
@@ -202,14 +202,13 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
   scroll: { paddingBottom: 80 },
-  hero: {
-    paddingHorizontal: Spacing.lg + 4,
-    paddingTop: Spacing.xl + 4,
-    paddingBottom: Spacing.lg,
-    gap: 4,
+  intro: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.md,
   },
   section: {
-    paddingHorizontal: Spacing.lg + 4,
+    paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.lg,
     gap: Spacing.md,
@@ -221,7 +220,7 @@ const styles = StyleSheet.create({
   },
   newsScroll: {
     gap: Spacing.md,
-    paddingRight: Spacing.lg + 4,
+    paddingRight: Spacing.lg,
   },
   compactList: {
     gap: Spacing.sm,

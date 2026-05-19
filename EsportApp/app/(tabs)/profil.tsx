@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Colors, Spacing, Radii } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
-import { Wordmark } from '@/components/ui/Wordmark';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Surface } from '@/components/ui/Surface';
 
 let handlerSet = false;
@@ -56,9 +56,7 @@ export default function ProfilScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Wordmark />
-      </View>
+      <PageHeader />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -109,11 +107,6 @@ export default function ProfilScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-  },
   content: {
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,

@@ -12,7 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
-import { Wordmark } from '@/components/ui/Wordmark';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { MatchRow, MatchRowMatch } from '@/components/ui/MatchRow';
 import { LeagueHeader } from '@/components/ui/LeagueHeader';
 import { FilterTabs, FilterKey } from '@/components/ui/FilterTabs';
@@ -149,12 +149,11 @@ export default function MatchsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Wordmark />
-        <Pressable hitSlop={8}>
+      <PageHeader
+        rightAction={
           <MaterialCommunityIcons name="calendar-blank" size={20} color={Colors.text.primary} />
-        </Pressable>
-      </View>
+        }
+      />
 
       <FilterTabs value={filter} onChange={setFilter} />
       <View style={styles.hairline} />
@@ -198,14 +197,6 @@ export default function MatchsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-  },
   hairline: { height: 1, backgroundColor: Colors.border.subtle },
   scrollContent: { paddingBottom: 80 },
   loader: { marginTop: 40 },
