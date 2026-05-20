@@ -1,8 +1,16 @@
 import { NewsItem } from '@/components/ui/NewsCard';
 
+// Query éditoriale ciblée : VCT actualités + roster/signing moves.
+// FR offre trop peu de contenu pour le moment, on prend EN — l'esport news est dominé par les sources anglophones.
 const FEED_URL =
-  'https://news.google.com/rss/search?q=valorant+esports&hl=fr-FR&gl=FR&ceid=FR:fr';
+  'https://news.google.com/rss/search?q=VCT+OR+%22valorant+roster%22+OR+%22valorant+signing%22+OR+%22valorant+championship%22&hl=en-US&gl=US&ceid=US:en';
 const CACHE_TTL_MS = 10 * 60 * 1000;
+
+// Sources à exclure : essentiellement des listings de matchs ou faux positifs (VCT = ticker boursier Yahoo).
+const EXCLUDED_SOURCES = new Set(['VALORANT ESPORTS', 'YAHOO FINANCE']);
+
+// Pattern de match listing : "TEAM_A VS TEAM_B" — souvent court, en majuscules.
+const isMatchListing = (title: string): boolean => /\b[A-Z0-9]{1,6}\s+(vs|VS|v\.)\s+[A-Z0-9]{1,6}\b/.test(title);
 
 let cache: { ts: number; items: NewsItem[] } | null = null;
 
@@ -54,6 +62,8 @@ export async function fetchNews(force = false): Promise<NewsItem[]> {
     const items = itemBlocks
       .map(parseItem)
       .filter((it): it is NewsItem => it !== null)
+      .filter((it) => !EXCLUDED_SOURCES.has(it.category))
+      .filter((it) => !isMatchListing(it.title))
       .slice(0, 20);
     cache = { ts: Date.now(), items };
     return items;
