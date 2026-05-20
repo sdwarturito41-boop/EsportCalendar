@@ -15,6 +15,7 @@ export interface NewsItem {
 
 export interface NewsCardProps {
   item: NewsItem;
+  /** Set a fixed width (e.g. 280 for horizontal scroll), or leave undefined for full-width (flex). */
   width?: number;
 }
 
@@ -27,17 +28,20 @@ const timeAgo = (iso: string): string => {
   return `${d}j`;
 };
 
-export const NewsCard: React.FC<NewsCardProps> = ({ item, width = 280 }) => {
+export const NewsCard: React.FC<NewsCardProps> = ({ item, width }) => {
   const handlePress = () => {
     if (item.url) Linking.openURL(item.url).catch(() => {});
   };
+  const imageHeight = width ? width * 0.5 : 160;
   return (
-    <Pressable onPress={handlePress} style={[styles.card, { width }]}>
-      <View style={[styles.imageWrap, { height: width * 0.5 }]}>
+    <Pressable onPress={handlePress} style={[styles.card, width ? { width } : styles.fullWidth]}>
+      <View style={[styles.imageWrap, { height: imageHeight }]}>
         {item.imageUrl ? (
           <Image source={{ uri: item.imageUrl }} style={styles.image} contentFit="cover" transition={200} />
         ) : (
-          <View style={styles.imagePlaceholder} />
+          <View style={styles.imagePlaceholder}>
+            <Text variant="ui.label" tone="muted">{item.category}</Text>
+          </View>
         )}
       </View>
       <View style={styles.body}>
@@ -66,7 +70,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bg.elevated,
   },
   image: { width: '100%', height: '100%' },
-  imagePlaceholder: { width: '100%', height: '100%' },
+  imagePlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  fullWidth: { alignSelf: 'stretch' },
   body: {
     padding: Spacing.md,
     gap: Spacing.sm,

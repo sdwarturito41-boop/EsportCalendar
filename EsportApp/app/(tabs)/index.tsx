@@ -19,6 +19,7 @@ import { FeaturedMatchCard } from '@/components/ui/FeaturedMatchCard';
 import { CompactMatchCard } from '@/components/ui/CompactMatchCard';
 import { NewsCard, NewsItem } from '@/components/ui/NewsCard';
 import { MatchRowMatch } from '@/components/ui/MatchRow';
+import { fetchNews } from '@/lib/news';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -42,36 +43,12 @@ const getTournament = (m: MatchWithTournament): Tournament | null => {
 
 const tierRank: Record<string, number> = { s: 1, a: 2, b: 3, c: 4, d: 5 };
 
-// Placeholder news jusqu'à intégration d'une vraie source.
-const MOCK_NEWS: NewsItem[] = [
-  {
-    id: 'n1',
-    title: 'Sentinels announce new roster for VCT 2026 season',
-    category: 'VALORANT',
-    publishedAt: new Date(Date.now() - 2 * 3_600_000).toISOString(),
-    imageUrl: null,
-  },
-  {
-    id: 'n2',
-    title: 'T1 dominates semifinals with perfect split performance',
-    category: 'VALORANT',
-    publishedAt: new Date(Date.now() - 4 * 3_600_000).toISOString(),
-    imageUrl: null,
-  },
-  {
-    id: 'n3',
-    title: 'Major upsets shake VCT Pacific rankings',
-    category: 'VALORANT',
-    publishedAt: new Date(Date.now() - 6 * 3_600_000).toISOString(),
-    imageUrl: null,
-  },
-];
-
 export default function HomeScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [featured, setFeatured] = useState<MatchWithTournament | null>(null);
   const [todayMatches, setTodayMatches] = useState<MatchWithTournament[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!supabase) {
@@ -116,6 +93,10 @@ export default function HomeScreen() {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    fetchNews().then(setNews);
+  }, []);
+
   const featuredHasLive = featured?.status === 'running';
 
   return (
@@ -154,15 +135,21 @@ export default function HomeScreen() {
                   <Text variant="ui.label" tone="accent">Voir tout</Text>
                 </Pressable>
               </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.newsScroll}
-              >
-                {MOCK_NEWS.map((n) => (
-                  <NewsCard key={n.id} item={n} />
-                ))}
-              </ScrollView>
+              {news.length === 0 ? (
+                <Text variant="ui.caption" tone="muted" style={styles.empty}>
+                  Chargement des actualités…
+                </Text>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.newsScroll}
+                >
+                  {news.slice(0, 8).map((n) => (
+                    <NewsCard key={n.id} item={n} />
+                  ))}
+                </ScrollView>
+              )}
             </View>
 
             <View style={styles.section}>
