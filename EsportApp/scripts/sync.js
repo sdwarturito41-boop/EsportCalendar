@@ -83,7 +83,15 @@ const composeTournamentName = (m) => {
   const tName = m.tournament?.name?.trim();
   const sName = m.serie?.full_name?.trim();
   const lName = m.league?.name?.trim();
-  const main = sName || lName || 'Tournament';
+
+  // Si serie.full_name est juste un nombre/année ("2026", "57"), il faut
+  // y préfixer le nom de la league sinon ça ne veut rien dire.
+  const serieIsTrivial = sName && /^\d+$/.test(sName);
+  let main;
+  if (serieIsTrivial && lName) main = `${lName} ${sName}`;
+  else if (sName && lName && !sName.toLowerCase().includes(lName.toLowerCase())) main = `${lName} · ${sName}`;
+  else main = sName || lName || 'Tournament';
+
   if (!tName || main.toLowerCase().includes(tName.toLowerCase())) return main;
   return `${main} · ${tName}`;
 };

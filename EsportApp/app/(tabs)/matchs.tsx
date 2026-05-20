@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { MatchRow, MatchRowMatch } from '@/components/ui/MatchRow';
 import { LeagueHeader } from '@/components/ui/LeagueHeader';
 import { FilterTabs, FilterKey } from '@/components/ui/FilterTabs';
+import { GameFilter, GameKey } from '@/components/ui/GameFilter';
 import { DateBar } from '@/components/ui/DateBar';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
@@ -39,6 +40,7 @@ interface TournamentGroup {
   leagueName: string;
   imageUrl: string | null;
   tier: string;
+  game: string;
   matches: Match[];
 }
 
@@ -65,6 +67,7 @@ export default function MatchsScreen() {
   const [groupedMatches, setGroupedMatches] = useState<TournamentGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [game, setGame] = useState<GameKey>('all');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const fetchMatches = useCallback(async () => {
@@ -103,6 +106,7 @@ export default function MatchsScreen() {
             leagueName,
             imageUrl: t?.image_url || null,
             tier: (t?.tier || 'unranked').toLowerCase(),
+            game: (t?.game || 'unknown').toLowerCase(),
             matches,
           };
         })
@@ -123,20 +127,23 @@ export default function MatchsScreen() {
   }, [fetchMatches]);
 
   const filteredGroups = useMemo(() => {
-    if (filter === 'all') return groupedMatches;
     return groupedMatches
+      .filter((g) => game === 'all' || g.game === game)
       .map((g) => ({
         ...g,
-        matches: g.matches.filter((m) => {
-          if (filter === 'live') return m.status === 'running';
-          if (filter === 'upcoming') return m.status === 'not_started';
-          if (filter === 'finished') return m.status === 'finished';
-          if (filter === 'favorites') return favorites.has(g.leagueName);
-          return true;
-        }),
+        matches:
+          filter === 'all'
+            ? g.matches
+            : g.matches.filter((m) => {
+                if (filter === 'live') return m.status === 'running';
+                if (filter === 'upcoming') return m.status === 'not_started';
+                if (filter === 'finished') return m.status === 'finished';
+                if (filter === 'favorites') return favorites.has(g.leagueName);
+                return true;
+              }),
       }))
       .filter((g) => g.matches.length > 0);
-  }, [groupedMatches, filter, favorites]);
+  }, [groupedMatches, filter, game, favorites]);
 
   const toggleFavorite = (leagueName: string) => {
     setFavorites((prev) => {
@@ -155,6 +162,7 @@ export default function MatchsScreen() {
         }
       />
 
+      <GameFilter value={game} onChange={setGame} />
       <FilterTabs value={filter} onChange={setFilter} />
       <View style={styles.hairline} />
 
