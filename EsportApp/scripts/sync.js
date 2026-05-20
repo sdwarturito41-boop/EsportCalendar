@@ -1,8 +1,8 @@
 /**
- * Sync Valorant matches from Pandascore → Supabase
+ * Sync esport matches from Pandascore → Supabase
  *
- * Fetches running, upcoming, and recent finished matches and upserts
- * them along with their tournaments into the Supabase tables.
+ * Couvre Valorant + CS2, filtré sur les tiers S et A uniquement
+ * (les "plus grosses compétitions"), fenêtre -3 / +14 jours.
  */
 
 const path = require('path');
@@ -12,7 +12,7 @@ const axios = require('axios');
 
 const supabase = createClient(
   process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
 );
 
 const PANDASCORE_TOKEN = process.env.PANDASCORE_TOKEN;
@@ -30,6 +30,12 @@ const api = axios.create({
 const PER_PAGE = 100;
 const PAST_DAYS = 3;
 const FUTURE_DAYS = 14;
+const ALLOWED_TIERS = new Set(['s', 'a']);
+
+const GAMES = [
+  { key: 'valorant', endpoint: '/valorant/matches' },
+  { key: 'cs2', endpoint: '/csgo/matches' },
+];
 
 const fetchPaginated = async (endpoint, params = {}) => {
   const all = [];
@@ -48,7 +54,6 @@ const mapStatus = (s) => {
   return 'not_started';
 };
 
-// Préfère la variante claire (dark_mode_image_url) pour qu'elle ressorte sur fond sombre.
 const pickLogo = (team) => team?.dark_mode_image_url || team?.image_url || null;
 
 const mapMatch = (m) => {
@@ -74,7 +79,6 @@ const mapMatch = (m) => {
   };
 };
 
-// Compose un nom complet : "EMEA: Stage 1 2026 · Group C" plutôt que juste "Group C".
 const composeTournamentName = (m) => {
   const tName = m.tournament?.name?.trim();
   const sName = m.serie?.full_name?.trim();
@@ -84,14 +88,14 @@ const composeTournamentName = (m) => {
   return `${main} · ${tName}`;
 };
 
-const mapTournament = (m) => {
+const mapTournament = (m, game) => {
   const t = m.tournament;
   if (!t) return null;
   return {
     id: String(t.id),
     name: composeTournamentName(m),
-    game: 'valorant',
-    tier: t.tier || null,
+    game,
+    tier: (t.tier || '').toLowerCase() || null,
     image_url: m.league?.image_url || null,
   };
 };
@@ -108,51 +112,73 @@ const upsertChunked = async (table, rows, conflictKey = 'id') => {
   }
 };
 
-(async () => {
-  console.log('--- ⚡ Pandascore → Supabase sync ---');
-
+const syncGame = async ({ key, endpoint }) => {
+  console.log(`\n--- 🎮 ${key.toUpperCase()} ---`);
   const now = new Date();
   const fromDate = new Date(now);
   fromDate.setDate(now.getDate() - PAST_DAYS);
   const toDate = new Date(now);
   toDate.setDate(now.getDate() + FUTURE_DAYS);
-
   const range = `${fromDate.toISOString().slice(0, 10)},${toDate.toISOString().slice(0, 10)}`;
-  console.log(`Window: ${range}`);
 
-  console.log('Fetching matches…');
-  const matches = await fetchPaginated('/valorant/matches', {
-    'range[begin_at]': range,
-    sort: 'begin_at',
-  });
-  console.log(`  → ${matches.length} matchs récupérés`);
+  const all = await fetchPaginated(endpoint, { 'range[begin_at]': range, sort: 'begin_at' });
+  console.log(`  fetched : ${all.length}`);
 
-  if (!matches.length) {
-    console.log('Aucun match dans la fenêtre. Stop.');
-    return;
-  }
+  const filtered = all.filter((m) => ALLOWED_TIERS.has((m.tournament?.tier || '').toLowerCase()));
+  console.log(`  tier S/A : ${filtered.length}`);
+
+  if (!filtered.length) return { tournaments: [], matches: [] };
 
   const tournamentsMap = new Map();
-  matches.forEach((m) => {
-    const t = mapTournament(m);
+  filtered.forEach((m) => {
+    const t = mapTournament(m, key);
     if (t) tournamentsMap.set(t.id, t);
   });
   const tournaments = Array.from(tournamentsMap.values());
+  const matches = filtered.map(mapMatch);
 
-  console.log(`Upserting ${tournaments.length} tournois…`);
   await upsertChunked('tournaments', tournaments);
+  await upsertChunked('matches', matches);
 
-  const matchRows = matches.map(mapMatch);
-  console.log(`Upserting ${matchRows.length} matchs…`);
-  await upsertChunked('matches', matchRows);
+  const byStatus = matches.reduce((acc, m) => ((acc[m.status] = (acc[m.status] || 0) + 1), acc), {});
+  console.log(`  ✅ ${tournaments.length} tournois / ${matches.length} matchs upserted`, byStatus);
+  return { tournaments, matches };
+};
 
-  const byStatus = matchRows.reduce((acc, m) => {
-    acc[m.status] = (acc[m.status] || 0) + 1;
-    return acc;
-  }, {});
-  console.log('--- ✅ Done', byStatus);
+const cleanupNonTopTier = async () => {
+  console.log('\n--- 🧹 Cleanup tournois hors S/A ---');
+  const { data: bad } = await supabase
+    .from('tournaments')
+    .select('id')
+    .not('tier', 'in', '("s","a")');
+  const ids = (bad || []).map((t) => t.id);
+  if (!ids.length) {
+    console.log('  rien à nettoyer');
+    return;
+  }
+  // Delete matches first (FK), puis les tournois.
+  const CHUNK = 200;
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const slice = ids.slice(i, i + CHUNK);
+    await supabase.from('matches').delete().in('tournament_id', slice);
+    await supabase.from('tournaments').delete().in('id', slice);
+  }
+  console.log(`  🗑️  ${ids.length} tournois (et leurs matchs) supprimés`);
+};
+
+(async () => {
+  console.log('--- ⚡ Pandascore → Supabase sync (S/A tiers only) ---');
+  await cleanupNonTopTier();
+  for (const game of GAMES) {
+    try {
+      await syncGame(game);
+    } catch (err) {
+      console.error(`[${game.key}] failed :`, err.message);
+      if (err.response?.data) console.error(JSON.stringify(err.response.data, null, 2));
+    }
+  }
+  console.log('\n--- Done ---');
 })().catch((err) => {
-  console.error('Sync failed:', err.message);
-  if (err.response?.data) console.error(JSON.stringify(err.response.data, null, 2));
+  console.error('Fatal :', err.message);
   process.exit(1);
 });
