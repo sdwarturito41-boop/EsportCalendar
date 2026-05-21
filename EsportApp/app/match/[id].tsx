@@ -42,6 +42,19 @@ interface MatchDetail {
   tournaments: Tournament;
 }
 
+const ExternalStatsButton: React.FC<{ source: string; url: string }> = ({ source, url }) => (
+  <Pressable
+    onPress={() => Linking.openURL(url).catch(() => {})}
+    style={({ pressed }) => [styles.externalBtn, pressed && { opacity: 0.85 }]}
+  >
+    <MaterialCommunityIcons name="chart-bar" size={18} color={Colors.text.primary} />
+    <Text variant="ui.body" tone="primary" style={{ flex: 1 }}>
+      Stats complètes sur {source}
+    </Text>
+    <MaterialCommunityIcons name="open-in-new" size={16} color={Colors.text.muted} />
+  </Pressable>
+);
+
 const formatDate = (iso: string): string => {
   const d = new Date(iso);
   return d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' });
@@ -52,6 +65,41 @@ const formatTime = (iso: string): string => {
 };
 
 type TabKey = 'resume' | 'parties' | 'rosters';
+
+// Pour chaque jeu : URL externe vers les stats complètes (map names,
+// scores per map, K/D/A/ACS). Free plan Pandascore ne les expose pas,
+// donc on délègue au site de référence de la communauté.
+const buildStatsUrl = (game: string | undefined, team1: string, team2: string): string => {
+  const q = encodeURIComponent(`${team1} ${team2}`);
+  switch ((game || '').toLowerCase()) {
+    case 'valorant':
+      return `https://www.vlr.gg/search?q=${q}`;
+    case 'cs2':
+      return `https://www.hltv.org/search?query=${q}`;
+    case 'lol':
+      return `https://liquipedia.net/leagueoflegends/index.php?search=${q}`;
+    case 'rl':
+      return `https://liquipedia.net/rocketleague/index.php?search=${q}`;
+    case 'dota2':
+      return `https://liquipedia.net/dota2/index.php?search=${q}`;
+    case 'ow':
+      return `https://liquipedia.net/overwatch/index.php?search=${q}`;
+    case 'r6':
+      return `https://liquipedia.net/rainbowsix/index.php?search=${q}`;
+    case 'cod':
+      return `https://liquipedia.net/callofduty/index.php?search=${q}`;
+    default:
+      return `https://liquipedia.net/index.php?search=${q}`;
+  }
+};
+
+const statsSourceLabel = (game: string | undefined): string => {
+  switch ((game || '').toLowerCase()) {
+    case 'valorant': return 'VLR.gg';
+    case 'cs2': return 'HLTV.org';
+    default: return 'Liquipedia';
+  }
+};
 
 export default function MatchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -263,19 +311,10 @@ export default function MatchDetailScreen() {
                   (_, i) => (
                     <View key={i} style={styles.gameRow}>
                       <Text variant="ui.caption" tone="muted">Partie {i + 1}</Text>
-                      <View style={styles.gameWinner}>
-                        <Text variant="ui.caption" tone="muted">Vainqueur</Text>
-                        <Text variant="ui.label" tone="muted">N/A</Text>
-                      </View>
+                      <Text variant="ui.label" tone="muted">—</Text>
                     </View>
                   ),
                 )}
-                <View style={styles.notice}>
-                  <MaterialCommunityIcons name="lock-outline" size={14} color={Colors.text.muted} />
-                  <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
-                    Détails par map (Ascent · Bind · Haven) et scores réservés au plan Pro Pandascore.
-                  </Text>
-                </View>
               </View>
             ) : (
               <View style={styles.emptyState}>
@@ -283,17 +322,26 @@ export default function MatchDetailScreen() {
                 <Text variant="ui.body" tone="muted">Match pas encore commencé</Text>
               </View>
             )}
+            <ExternalStatsButton
+              source={statsSourceLabel(match.tournaments?.game)}
+              url={buildStatsUrl(match.tournaments?.game, match.opponent1_name, match.opponent2_name)}
+            />
           </View>
         )}
 
         {tab === 'rosters' && (
           <View style={styles.tabContent}>
             <View style={styles.notice}>
-              <MaterialCommunityIcons name="lock-outline" size={14} color={Colors.text.muted} />
+              <MaterialCommunityIcons name="information-outline" size={14} color={Colors.text.muted} />
               <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
-                Compositions et stats joueurs (K/D/A/ACS) bientôt disponibles.
+                Compositions et stats joueurs (K/D/A/ACS) pas exposées par Pandascore free.
+                Retrouve-les sur {statsSourceLabel(match.tournaments?.game)}.
               </Text>
             </View>
+            <ExternalStatsButton
+              source={statsSourceLabel(match.tournaments?.game)}
+              url={buildStatsUrl(match.tournaments?.game, match.opponent1_name, match.opponent2_name)}
+            />
           </View>
         )}
       </ScrollView>
@@ -396,5 +444,15 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bg.surface,
     borderRadius: Radii.md,
     marginTop: Spacing.sm,
+  },
+  externalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: Colors.bg.surface,
+    borderRadius: Radii.md,
+    borderWidth: 1,
+    borderColor: Colors.accent.indigo,
   },
 });
