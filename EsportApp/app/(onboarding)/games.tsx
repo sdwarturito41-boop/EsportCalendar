@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Colors, Spacing, Radii } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
 import { Wordmark } from '@/components/ui/Wordmark';
+import { useAuth } from '@/lib/auth';
 
 interface GameOption {
   key: string;
@@ -16,11 +17,15 @@ interface GameOption {
 const GAMES: GameOption[] = [
   { key: 'valorant', label: 'Valorant', icon: 'pistol' },
   { key: 'cs2', label: 'Counter-Strike 2', icon: 'target' },
+  { key: 'rl', label: 'Rocket League', icon: 'rocket-launch' },
 ];
 
 export default function GamesScreen() {
   const router = useRouter();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { profile } = useAuth();
+  const [selected, setSelected] = useState<Set<string>>(
+    () => new Set(profile?.favorite_games || []),
+  );
 
   const toggle = (key: string) => {
     const next = new Set(selected);
@@ -42,7 +47,9 @@ export default function GamesScreen() {
         <View style={styles.hero}>
           <Wordmark size="big" />
           <Text variant="ui.body" tone="muted" style={styles.subtitle}>
-            Choisis les jeux que tu suis. (1/2)
+            {profile?.onboarded_at
+              ? 'Modifie les jeux que tu suis. (1/2)'
+              : 'Choisis les jeux que tu suis. (1/2)'}
           </Text>
         </View>
 

@@ -35,6 +35,7 @@ const ALLOWED_TIERS = new Set(['s', 'a']);
 const GAMES = [
   { key: 'valorant', endpoint: '/valorant/matches' },
   { key: 'cs2', endpoint: '/csgo/matches' },
+  { key: 'rl', endpoint: '/rl/matches' },
 ];
 
 const fetchPaginated = async (endpoint, params = {}) => {

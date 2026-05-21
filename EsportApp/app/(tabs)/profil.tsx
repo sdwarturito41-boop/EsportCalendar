@@ -7,11 +7,13 @@ import { Text } from '@/components/ui/Text';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Surface } from '@/components/ui/Surface';
 import { useAuth } from '@/lib/auth';
+import { useRouter } from 'expo-router';
 
 let handlerSet = false;
 
 export default function ProfilScreen() {
-  const { session, signOut } = useAuth();
+  const { session, profile, signOut } = useAuth();
+  const router = useRouter();
 
   const requestPermissions = async () => {
     const Notifications = await import('expo-notifications');
@@ -91,6 +93,29 @@ export default function ProfilScreen() {
               <Text variant="ui.body" tone="primary" style={{ flex: 1 }}>
                 Tester une alerte match
               </Text>
+            </Surface>
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
+          <Text variant="ui.label" tone="muted" style={styles.sectionTitle}>
+            Préférences
+          </Text>
+          <Pressable
+            onPress={() => router.push('/games')}
+            style={({ pressed }) => [pressed && styles.pressed]}
+          >
+            <Surface level="surface" radius="md" padding="md" bordered style={styles.row}>
+              <MaterialCommunityIcons name="gamepad-variant" size={20} color={Colors.text.primary} />
+              <View style={{ flex: 1 }}>
+                <Text variant="ui.body" tone="primary">Jeux & équipes favoris</Text>
+                {profile && (
+                  <Text variant="ui.caption" tone="muted">
+                    {profile.favorite_games.length} jeu(x) · {profile.favorite_teams.length} équipe(s)
+                  </Text>
+                )}
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.text.muted} />
             </Surface>
           </Pressable>
         </View>

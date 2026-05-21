@@ -21,11 +21,13 @@ import { listTeamsForGames, saveOnboarding } from '@/lib/profile';
 export default function TeamsScreen() {
   const router = useRouter();
   const { games: gamesParam } = useLocalSearchParams<{ games: string }>();
-  const { session, refreshProfile } = useAuth();
+  const { session, profile, refreshProfile } = useAuth();
   const games = useMemo(() => (gamesParam || '').split(',').filter(Boolean), [gamesParam]);
 
   const [teams, setTeams] = useState<{ name: string; logo: string | null; game: string }[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(
+    () => new Set(profile?.favorite_teams || []),
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState('');
