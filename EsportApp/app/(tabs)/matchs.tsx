@@ -17,8 +17,8 @@ import { Text } from '@/components/ui/Text';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { MatchRow, MatchRowMatch } from '@/components/ui/MatchRow';
 import { LeagueHeader } from '@/components/ui/LeagueHeader';
-import { FilterTabs, FilterKey } from '@/components/ui/FilterTabs';
 import { GameFilter, GameKey } from '@/components/ui/GameFilter';
+import { LiveChip } from '@/components/ui/LiveChip';
 import { DateBar } from '@/components/ui/DateBar';
 
 interface Tournament {
@@ -115,7 +115,8 @@ export default function MatchsScreen() {
   });
   const [groupedMatches, setGroupedMatches] = useState<TournamentGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterKey>('all');
+  const [favOnly, setFavOnly] = useState(false);
+  const [liveOnly, setLiveOnly] = useState(false);
 
   // Si l'utilisateur a un seul jeu favori, pré-sélectionne ; sinon 'all'.
   const initialGame: GameKey =
@@ -199,27 +200,20 @@ export default function MatchsScreen() {
       .filter((g) => game === 'all' || g.game === game)
       .map((g) => ({
         ...g,
-        matches:
-          filter === 'all'
-            ? g.matches
-            : g.matches.filter((m) => {
-                if (filter === 'live') return m.status === 'running';
-                if (filter === 'upcoming') return m.status === 'not_started';
-                if (filter === 'finished') return m.status === 'finished';
-                if (filter === 'favorites') {
-                  // Englobe : match dans un jeu favori OU avec une team
-                  // favorite OU dans une league marquée en session.
-                  const gameMatch = favoriteGames.has(g.game);
-                  const teamMatch =
-                    favoriteTeams.has(m.opponent1_name) ||
-                    favoriteTeams.has(m.opponent2_name);
-                  return gameMatch || teamMatch || favorites.has(g.leagueName);
-                }
-                return true;
-              }),
+        matches: g.matches.filter((m) => {
+          if (liveOnly && m.status !== 'running') return false;
+          if (favOnly) {
+            const gameMatch = favoriteGames.has(g.game);
+            const teamMatch =
+              favoriteTeams.has(m.opponent1_name) || favoriteTeams.has(m.opponent2_name);
+            const leagueMatch = favorites.has(g.leagueName);
+            if (!(gameMatch || teamMatch || leagueMatch)) return false;
+          }
+          return true;
+        }),
       }))
       .filter((g) => g.matches.length > 0);
-  }, [groupedMatches, filter, game, favorites, favoriteTeams, favoriteGames]);
+  }, [groupedMatches, favOnly, liveOnly, game, favorites, favoriteTeams, favoriteGames]);
 
   const toggleFavorite = (leagueName: string) => {
     setFavorites((prev) => {
@@ -239,7 +233,27 @@ export default function MatchsScreen() {
       />
 
       <GameFilter value={game} onChange={setGame} />
-      <FilterTabs value={filter} onChange={setFilter} />
+
+      <View style={styles.quickFilters}>
+        <Pressable
+          onPress={() => setFavOnly((v) => !v)}
+          style={[styles.toggle, favOnly && styles.toggleActive]}
+        >
+          <MaterialCommunityIcons
+            name={favOnly ? 'star' : 'star-outline'}
+            size={14}
+            color={favOnly ? Colors.accent.indigo : Colors.text.muted}
+          />
+          <Text variant="ui.label" tone={favOnly ? 'accent' : 'muted'}>Favoris</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setLiveOnly((v) => !v)}
+          style={[styles.toggle, liveOnly && styles.toggleLiveActive]}
+        >
+          <View style={[styles.dot, liveOnly && styles.dotActive]} />
+          <Text variant="ui.label" tone={liveOnly ? 'live' : 'muted'}>Live</Text>
+        </Pressable>
+      </View>
       <View style={styles.hairline} />
 
       <DateBar date={selectedDate} onChange={setSelectedDate} />
@@ -298,9 +312,11 @@ export default function MatchsScreen() {
                       hasLive={group.matches.some((m) => m.status === 'running')}
                       onToggleFavorite={() => toggleFavorite(group.leagueName)}
                     />
-                    {group.matches.map((m) => (
-                      <MatchRow key={m.id} match={m} />
-                    ))}
+                    <View style={styles.matchesBlock}>
+                      {group.matches.map((m) => (
+                        <MatchRow key={m.id} match={m} />
+                      ))}
+                    </View>
                   </>
                 )}
               </View>
@@ -315,6 +331,41 @@ export default function MatchsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
   hairline: { height: 1, backgroundColor: Colors.border.subtle },
+  matchesBlock: {
+    backgroundColor: Colors.bg.surface,
+    marginHorizontal: Spacing.md,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: Spacing.xs,
+  },
+  quickFilters: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+  },
+  toggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
+    backgroundColor: 'transparent',
+  },
+  toggleActive: {
+    borderColor: Colors.accent.indigo,
+    backgroundColor: 'rgba(92, 92, 232, 0.12)',
+  },
+  toggleLiveActive: {
+    borderColor: Colors.semantic.live,
+    backgroundColor: 'rgba(255, 59, 48, 0.12)',
+  },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.text.muted },
+  dotActive: { backgroundColor: Colors.semantic.live },
   gameSection: {
     flexDirection: 'row',
     alignItems: 'center',
