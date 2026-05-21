@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Colors, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth';
 import { Text } from '@/components/ui/Text';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { MatchRow, MatchRowMatch } from '@/components/ui/MatchRow';
@@ -55,6 +56,9 @@ const getTournament = (match: Match): Tournament | null => {
 };
 
 export default function MatchsScreen() {
+  const { profile } = useAuth();
+  const favoriteTeams = useMemo(() => new Set(profile?.favorite_teams || []), [profile]);
+
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -63,7 +67,13 @@ export default function MatchsScreen() {
   const [groupedMatches, setGroupedMatches] = useState<TournamentGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
-  const [game, setGame] = useState<GameKey>('all');
+
+  // Si l'utilisateur a un seul jeu favori, pré-sélectionne ; sinon 'all'.
+  const initialGame: GameKey =
+    profile?.favorite_games?.length === 1
+      ? (profile.favorite_games[0] as GameKey)
+      : 'all';
+  const [game, setGame] = useState<GameKey>(initialGame);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const fetchMatches = useCallback(async () => {
@@ -130,12 +140,18 @@ export default function MatchsScreen() {
                 if (filter === 'live') return m.status === 'running';
                 if (filter === 'upcoming') return m.status === 'not_started';
                 if (filter === 'finished') return m.status === 'finished';
-                if (filter === 'favorites') return favorites.has(g.leagueName);
+                if (filter === 'favorites') {
+                  return (
+                    favoriteTeams.has(m.opponent1_name) ||
+                    favoriteTeams.has(m.opponent2_name) ||
+                    favorites.has(g.leagueName)
+                  );
+                }
                 return true;
               }),
       }))
       .filter((g) => g.matches.length > 0);
-  }, [groupedMatches, filter, game, favorites]);
+  }, [groupedMatches, filter, game, favorites, favoriteTeams]);
 
   const toggleFavorite = (leagueName: string) => {
     setFavorites((prev) => {

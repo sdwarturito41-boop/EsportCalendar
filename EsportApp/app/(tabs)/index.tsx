@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 
 import { Colors, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth';
 import { Text } from '@/components/ui/Text';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LiveChip } from '@/components/ui/LiveChip';
@@ -25,6 +26,7 @@ interface Tournament {
   id: string;
   name: string;
   tier: string | null;
+  game: string | null;
 }
 
 interface MatchWithTournament extends MatchRowMatch {
@@ -41,6 +43,10 @@ const tierRank: Record<string, number> = { s: 1, a: 2, b: 3, c: 4, d: 5 };
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { profile } = useAuth();
+  const favoriteTeams = useMemo(() => new Set(profile?.favorite_teams || []), [profile]);
+  const favoriteGames = useMemo(() => new Set(profile?.favorite_games || []), [profile]);
+
   const [loading, setLoading] = useState(true);
   const [featured, setFeatured] = useState<MatchWithTournament | null>(null);
   const [todayMatches, setTodayMatches] = useState<MatchWithTournament[]>([]);
@@ -56,7 +62,7 @@ export default function HomeScreen() {
 
       const { data } = await supabase
         .from('matches')
-        .select('*, tournaments(id, name, tier)')
+        .select('*, tournaments(id, name, tier, game)')
         .gte('begin_at', start.toISOString())
         .lt('begin_at', end.toISOString())
         .order('begin_at', { ascending: true });
@@ -65,21 +71,32 @@ export default function HomeScreen() {
 
       const matches = data as MatchWithTournament[];
 
-      // Featured : LIVE prioritaire, sinon top tier upcoming
+      // Priorité au featured : (1) LIVE d'une team favorite > (2) LIVE quelconque
+      // > (3) upcoming d'une team favorite top-tier > (4) upcoming top-tier
+      const involvesFavTeam = (m: MatchWithTournament) =>
+        favoriteTeams.has(m.opponent1_name) || favoriteTeams.has(m.opponent2_name);
       const live = matches.find((m) => m.status === 'running');
-      const upcoming = matches
-        .filter((m) => m.status === 'not_started')
-        .sort((a, b) => {
-          const ra = tierRank[(getTournament(a)?.tier || 'z').toLowerCase()] || 99;
-          const rb = tierRank[(getTournament(b)?.tier || 'z').toLowerCase()] || 99;
-          return ra - rb;
-        })[0];
-      setFeatured(live || upcoming || matches[0] || null);
-      setTodayMatches(matches.slice(0, 5));
+      const liveFav = matches.find((m) => m.status === 'running' && involvesFavTeam(m));
+      const upcomings = matches.filter((m) => m.status === 'not_started').sort((a, b) => {
+        const ra = tierRank[(getTournament(a)?.tier || 'z').toLowerCase()] || 99;
+        const rb = tierRank[(getTournament(b)?.tier || 'z').toLowerCase()] || 99;
+        return ra - rb;
+      });
+      const upcomingFav = upcomings.find(involvesFavTeam);
+      setFeatured(liveFav || live || upcomingFav || upcomings[0] || matches[0] || null);
+
+      // Today list : si l'utilisateur a des jeux favoris, on filtre dessus.
+      const todayFiltered = favoriteGames.size > 0
+        ? matches.filter((m) => {
+            const g = getTournament(m)?.game;
+            return g ? favoriteGames.has(g) : true;
+          })
+        : matches;
+      setTodayMatches(todayFiltered.slice(0, 5));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [favoriteGames, favoriteTeams]);
 
   useEffect(() => {
     fetchData();
