@@ -101,10 +101,18 @@ const statsSourceLabel = (game: string | undefined): string => {
   }
 };
 
+interface MatchMap {
+  position: number;
+  map_name: string | null;
+  score1: number;
+  score2: number;
+}
+
 export default function MatchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [match, setMatch] = useState<MatchDetail | null>(null);
+  const [maps, setMaps] = useState<MatchMap[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>('resume');
@@ -120,6 +128,12 @@ export default function MatchDetailScreen() {
         .single();
       if (e) throw e;
       setMatch(data as MatchDetail);
+      const { data: mapRows } = await supabase
+        .from('match_maps')
+        .select('position, map_name, score1, score2')
+        .eq('match_id', id)
+        .order('position', { ascending: true });
+      setMaps((mapRows || []) as MatchMap[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
@@ -302,7 +316,46 @@ export default function MatchDetailScreen() {
 
         {tab === 'parties' && (
           <View style={styles.tabContent}>
-            {showScore ? (
+            {!showScore ? (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="clock-outline" size={40} color={Colors.text.muted} />
+                <Text variant="ui.body" tone="muted">Match pas encore commencé</Text>
+              </View>
+            ) : maps.length > 0 ? (
+              <View style={styles.mapsList}>
+                {maps.map((m) => {
+                  const won1 = m.score1 > m.score2;
+                  const won2 = m.score2 > m.score1;
+                  return (
+                    <View key={m.position} style={styles.mapCard}>
+                      <View style={styles.mapLeft}>
+                        <Text variant="ui.label" tone="muted">{`M${m.position}`}</Text>
+                        <Text variant="ui.body" tone="primary" style={styles.mapName}>
+                          {m.map_name || `Map ${m.position}`}
+                        </Text>
+                      </View>
+                      <View style={styles.mapScore}>
+                        <Text
+                          variant="display.score"
+                          tone={won1 ? 'primary' : 'muted'}
+                          style={styles.mapScoreNum}
+                        >
+                          {m.score1}
+                        </Text>
+                        <Text variant="display.score" tone="muted">–</Text>
+                        <Text
+                          variant="display.score"
+                          tone={won2 ? 'primary' : 'muted'}
+                          style={styles.mapScoreNum}
+                        >
+                          {m.score2}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            ) : (
               <View style={styles.infoCard}>
                 <Text variant="ui.body" tone="primary" style={{ marginBottom: Spacing.sm }}>
                   {`Best of ${match.best_of} · ${match.opponent1_score + match.opponent2_score} parties jouées`}
@@ -315,11 +368,12 @@ export default function MatchDetailScreen() {
                     </View>
                   ),
                 )}
-              </View>
-            ) : (
-              <View style={styles.emptyState}>
-                <MaterialCommunityIcons name="clock-outline" size={40} color={Colors.text.muted} />
-                <Text variant="ui.body" tone="muted">Match pas encore commencé</Text>
+                <View style={styles.notice}>
+                  <MaterialCommunityIcons name="information-outline" size={14} color={Colors.text.muted} />
+                  <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
+                    Détails par map en cours d'agrégation depuis VLR.gg. Reviens plus tard ou ouvre le lien externe.
+                  </Text>
+                </View>
               </View>
             )}
             <ExternalStatsButton
@@ -455,4 +509,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.accent.indigo,
   },
+  mapsList: { gap: Spacing.sm },
+  mapCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+    backgroundColor: Colors.bg.surface,
+    borderRadius: Radii.md,
+    gap: Spacing.md,
+  },
+  mapLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
+  mapName: {},
+  mapScore: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  mapScoreNum: { fontSize: 20 },
 });
