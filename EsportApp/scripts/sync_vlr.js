@@ -68,16 +68,14 @@ const parseResultsPage = (html) => {
   return items;
 };
 
-// Parse les tableaux de stats joueurs sur la page match VLR.
-// Retourne deux arrays (un par équipe), chacun avec 5 joueurs + leurs stats agrégées.
-const parsePlayerStats = (html) => {
-  // 2 tables wf-table-inset mod-overview au top de la page (une par team).
-  // Plus tard, d'autres tables par map. On garde les 2 premières.
+// Parse les tableaux de stats joueurs dans une zone HTML donnée
+// (peut être la page entière pour "all maps", ou un game block pour per-map).
+// Retourne 2 arrays (1 par équipe), chacun avec 5 joueurs + stats.
+const parsePlayerStatsScoped = (html) => {
   const tables = [...html.matchAll(/<table class="wf-table-inset mod-overview">([\s\S]*?)<\/table>/g)];
   const result = [[], []];
   for (let teamIdx = 0; teamIdx < Math.min(2, tables.length); teamIdx++) {
     const rows = [...tables[teamIdx][1].matchAll(/<tr>([\s\S]*?)<\/tr>/g)];
-    // Skip header row (index 0)
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r][1];
       // Nom du joueur : dans <a href="/player/..."> ... <div class="text-of">PSEUDO</div>
@@ -121,7 +119,12 @@ const parsePlayerStats = (html) => {
   return result;
 };
 
-// Parse une page match VLR. Retourne [{position, map_name, score1, score2, team1_name, team2_name}]
+// Garde l'API existante : parsePlayerStats sur la page complète pour
+// récupérer les stats agrégées (compatible match_player_stats).
+const parsePlayerStats = (html) => parsePlayerStatsScoped(html);
+
+// Parse une page match VLR. Retourne [{position, map_name, score1, score2,
+//   team1_name, team2_name, players: [team1[], team2[]] }]
 const parseMatchPage = (html) => {
   const games = [];
   const blocks = html.split(/<div class="vm-stats-game " data-game-id="(\d+)">/).slice(1);
@@ -150,6 +153,9 @@ const parseMatchPage = (html) => {
       .filter(Boolean);
 
     if (!mapName || teams.length < 2) continue;
+    // Per-map player stats : on parse les tables wf-table-inset mod-overview
+    // qui sont DANS le game block.
+    const perMapPlayers = parsePlayerStatsScoped(block);
     games.push({
       position: games.length + 1,
       map_name: mapName,
@@ -157,6 +163,7 @@ const parseMatchPage = (html) => {
       score1_raw: teams[0].score,
       team2_name: teams[1].name,
       score2_raw: teams[1].score,
+      players: perMapPlayers,
     });
   }
   return games;
@@ -182,9 +189,13 @@ const parseMatchPage = (html) => {
   // stats), on re-fetch.
   const { data: existingMaps } = await supabase.from('match_maps').select('match_id');
   const { data: existingStats } = await supabase.from('match_player_stats').select('match_id');
+  const { data: existingMapStats } = await supabase.from('match_player_map_stats').select('match_id');
   const haveMaps = new Set((existingMaps || []).map((m) => m.match_id));
   const haveStats = new Set((existingStats || []).map((m) => m.match_id));
-  const toFetch = finished.filter((m) => !haveMaps.has(m.id) || !haveStats.has(m.id));
+  const haveMapStats = new Set((existingMapStats || []).map((m) => m.match_id));
+  const toFetch = finished.filter(
+    (m) => !haveMaps.has(m.id) || !haveStats.has(m.id) || !haveMapStats.has(m.id),
+  );
   console.log(`${toFetch.length}/${finished.length} matchs Valo à enrichir`);
 
   if (!toFetch.length) {
@@ -284,8 +295,30 @@ const parseMatchPage = (html) => {
         if (psErr) console.warn(`  ⚠️  ${m.id} player_stats :`, psErr.message);
       }
 
+      // 7. Insert per-map player stats
+      const mapStatsRows = [];
+      games.forEach((g) => {
+        g.players?.forEach((teamPlayers, teamIdxVlr) => {
+          const teamSide = firstTeamIsOpp1 ? teamIdxVlr + 1 : 2 - teamIdxVlr;
+          teamPlayers.forEach((p) =>
+            mapStatsRows.push({
+              match_id: m.id,
+              map_position: g.position,
+              team_side: teamSide,
+              ...p,
+            }),
+          );
+        });
+      });
+      if (mapStatsRows.length) {
+        const { error: mpErr } = await supabase
+          .from('match_player_map_stats')
+          .upsert(mapStatsRows, { onConflict: 'match_id,map_position,team_side,player_name' });
+        if (mpErr) console.warn(`  ⚠️  ${m.id} map_stats :`, mpErr.message);
+      }
+
       enriched++;
-      console.log(`  ✓ ${m.opponent1_name} vs ${m.opponent2_name} — ${rows.length} maps, ${psRows.length} joueurs`);
+      console.log(`  ✓ ${m.opponent1_name} vs ${m.opponent2_name} — ${rows.length} maps, ${psRows.length} overall, ${mapStatsRows.length} per-map stats`);
       await sleep(600);
     } catch (e) {
       console.warn(`  ⚠️  fetch ${vlrMatch.url} :`, e.message);

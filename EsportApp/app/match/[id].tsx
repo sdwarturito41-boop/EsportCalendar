@@ -122,12 +122,18 @@ interface PlayerStat {
   hs_pct: string | null;
 }
 
+interface MapPlayerStat extends PlayerStat {
+  map_position: number;
+}
+
 export default function MatchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [match, setMatch] = useState<MatchDetail | null>(null);
   const [maps, setMaps] = useState<MatchMap[]>([]);
   const [stats, setStats] = useState<PlayerStat[]>([]);
+  const [mapStats, setMapStats] = useState<MapPlayerStat[]>([]);
+  const [expandedMap, setExpandedMap] = useState<number | null>(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>('resume');
@@ -154,6 +160,12 @@ export default function MatchDetailScreen() {
         .select('team_side, player_name, agent, rating, acs, kills, deaths, assists, kast, adr, hs_pct')
         .eq('match_id', id);
       setStats((statRows || []) as PlayerStat[]);
+      const { data: mapStatRows } = await supabase
+        .from('match_player_map_stats')
+        .select('map_position, team_side, player_name, agent, rating, acs, kills, deaths, assists, kast, adr, hs_pct')
+        .eq('match_id', id)
+        .order('map_position', { ascending: true });
+      setMapStats((mapStatRows || []) as MapPlayerStat[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
@@ -346,31 +358,75 @@ export default function MatchDetailScreen() {
                 {maps.map((m) => {
                   const won1 = m.score1 > m.score2;
                   const won2 = m.score2 > m.score1;
+                  const isExpanded = expandedMap === m.position;
+                  const mapPlayers = mapStats.filter((s) => s.map_position === m.position);
                   return (
-                    <View key={m.position} style={styles.mapCard}>
-                      <View style={styles.mapLeft}>
-                        <Text variant="ui.label" tone="muted">{`M${m.position}`}</Text>
-                        <Text variant="ui.body" tone="primary" style={styles.mapName}>
-                          {m.map_name || `Map ${m.position}`}
-                        </Text>
-                      </View>
-                      <View style={styles.mapScore}>
-                        <Text
-                          variant="display.score"
-                          tone={won1 ? 'primary' : 'muted'}
-                          style={styles.mapScoreNum}
-                        >
-                          {m.score1}
-                        </Text>
-                        <Text variant="display.score" tone="muted">–</Text>
-                        <Text
-                          variant="display.score"
-                          tone={won2 ? 'primary' : 'muted'}
-                          style={styles.mapScoreNum}
-                        >
-                          {m.score2}
-                        </Text>
-                      </View>
+                    <View key={m.position} style={styles.mapBlock}>
+                      <Pressable
+                        onPress={() => setExpandedMap(isExpanded ? null : m.position)}
+                        style={styles.mapCard}
+                      >
+                        <View style={styles.mapLeft}>
+                          <Text variant="ui.label" tone="muted">{`M${m.position}`}</Text>
+                          <Text variant="ui.body" tone="primary" style={styles.mapName}>
+                            {m.map_name || `Map ${m.position}`}
+                          </Text>
+                        </View>
+                        <View style={styles.mapScore}>
+                          <Text variant="display.score" tone={won1 ? 'primary' : 'muted'} style={styles.mapScoreNum}>
+                            {m.score1}
+                          </Text>
+                          <Text variant="display.score" tone="muted">–</Text>
+                          <Text variant="display.score" tone={won2 ? 'primary' : 'muted'} style={styles.mapScoreNum}>
+                            {m.score2}
+                          </Text>
+                        </View>
+                        <MaterialCommunityIcons
+                          name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                          size={18}
+                          color={Colors.text.muted}
+                        />
+                      </Pressable>
+                      {isExpanded && mapPlayers.length > 0 && (
+                        <View style={styles.mapStatsWrap}>
+                          {[1, 2].map((side) => {
+                            const teamName = side === 1 ? match.opponent1_name : match.opponent2_name;
+                            const sidePlayers = mapPlayers.filter((p) => p.team_side === side);
+                            if (!sidePlayers.length) return null;
+                            return (
+                              <View key={side} style={styles.statsTable}>
+                                <View style={styles.statsHeader}>
+                                  <Text variant="ui.label" tone="muted" style={styles.colPlayer} numberOfLines={1}>
+                                    {teamName}
+                                  </Text>
+                                  <Text variant="ui.label" tone="muted" style={styles.colNum}>ACS</Text>
+                                  <Text variant="ui.label" tone="muted" style={styles.colNum}>K</Text>
+                                  <Text variant="ui.label" tone="muted" style={styles.colNum}>D</Text>
+                                  <Text variant="ui.label" tone="muted" style={styles.colNum}>A</Text>
+                                  <Text variant="ui.label" tone="muted" style={styles.colNum}>HS</Text>
+                                </View>
+                                {sidePlayers.map((p) => (
+                                  <View key={p.player_name} style={styles.statsRow}>
+                                    <View style={styles.colPlayer}>
+                                      <Text variant="ui.body" tone="primary" numberOfLines={1}>{p.player_name}</Text>
+                                      {!!p.agent && (
+                                        <Text variant="ui.caption" tone="muted" style={styles.agentLabel}>
+                                          {p.agent}
+                                        </Text>
+                                      )}
+                                    </View>
+                                    <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.acs ?? '—'}</Text>
+                                    <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.kills ?? '—'}</Text>
+                                    <Text variant="ui.body" tone="muted" style={styles.colNum}>{p.deaths ?? '—'}</Text>
+                                    <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.assists ?? '—'}</Text>
+                                    <Text variant="ui.body" tone="muted" style={styles.colNum}>{p.hs_pct ?? '—'}</Text>
+                                  </View>
+                                ))}
+                              </View>
+                            );
+                          })}
+                        </View>
+                      )}
                     </View>
                   );
                 })}
@@ -405,56 +461,12 @@ export default function MatchDetailScreen() {
 
         {tab === 'rosters' && (
           <View style={styles.tabContent}>
-            {stats.length > 0 ? (
-              <>
-                {[1, 2].map((side) => {
-                  const teamName = side === 1 ? match.opponent1_name : match.opponent2_name;
-                  const teamPlayers = stats.filter((p) => p.team_side === side);
-                  if (!teamPlayers.length) return null;
-                  return (
-                    <View key={side} style={styles.rosterTeam}>
-                      <Text variant="ui.label" tone="muted" style={styles.rosterTeamName}>
-                        {teamName}
-                      </Text>
-                      <View style={styles.statsTable}>
-                        <View style={styles.statsHeader}>
-                          <Text variant="ui.label" tone="muted" style={styles.colPlayer}>Joueur</Text>
-                          <Text variant="ui.label" tone="muted" style={styles.colNum}>ACS</Text>
-                          <Text variant="ui.label" tone="muted" style={styles.colNum}>K</Text>
-                          <Text variant="ui.label" tone="muted" style={styles.colNum}>D</Text>
-                          <Text variant="ui.label" tone="muted" style={styles.colNum}>A</Text>
-                        </View>
-                        {teamPlayers.map((p) => (
-                          <View key={p.player_name} style={styles.statsRow}>
-                            <View style={styles.colPlayer}>
-                              <Text variant="ui.body" tone="primary" numberOfLines={1}>
-                                {p.player_name}
-                              </Text>
-                              {!!p.agent && (
-                                <Text variant="ui.caption" tone="muted" style={styles.agentLabel}>
-                                  {p.agent}
-                                </Text>
-                              )}
-                            </View>
-                            <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.acs ?? '—'}</Text>
-                            <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.kills ?? '—'}</Text>
-                            <Text variant="ui.body" tone="muted" style={styles.colNum}>{p.deaths ?? '—'}</Text>
-                            <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.assists ?? '—'}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  );
-                })}
-              </>
-            ) : (
-              <View style={styles.notice}>
-                <MaterialCommunityIcons name="information-outline" size={14} color={Colors.text.muted} />
-                <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
-                  Stats joueurs en cours d'agrégation depuis VLR.gg ou pas dispo pour ce match.
-                </Text>
-              </View>
-            )}
+            <View style={styles.notice}>
+              <MaterialCommunityIcons name="information-outline" size={14} color={Colors.text.muted} />
+              <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
+                Photos et compositions des équipes bientôt — sync Pandascore en cours.
+              </Text>
+            </View>
             <ExternalStatsButton
               source={statsSourceLabel(match.tournaments?.game)}
               url={buildStatsUrl(match.tournaments?.game, match.opponent1_name, match.opponent2_name)}
@@ -573,6 +585,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.accent.indigo,
   },
   mapsList: { gap: Spacing.sm },
+  mapBlock: { gap: Spacing.xs },
+  mapStatsWrap: { gap: Spacing.sm },
   mapCard: {
     flexDirection: 'row',
     alignItems: 'center',
