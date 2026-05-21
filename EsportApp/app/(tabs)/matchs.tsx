@@ -124,6 +124,15 @@ export default function MatchsScreen() {
       : 'all';
   const [game, setGame] = useState<GameKey>(initialGame);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [collapsedGames, setCollapsedGames] = useState<Set<string>>(new Set());
+
+  const toggleGameCollapse = (g: string) => {
+    setCollapsedGames((prev) => {
+      const next = new Set(prev);
+      next.has(g) ? next.delete(g) : next.add(g);
+      return next;
+    });
+  };
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -253,10 +262,14 @@ export default function MatchsScreen() {
           {filteredGroups.map((group, idx) => {
             const prevGame = idx > 0 ? filteredGroups[idx - 1].game : null;
             const showGameHeader = group.game !== prevGame;
+            const isCollapsed = collapsedGames.has(group.game);
             return (
               <View key={group.leagueName}>
                 {showGameHeader && (
-                  <View style={styles.gameSection}>
+                  <Pressable
+                    style={styles.gameSection}
+                    onPress={() => toggleGameCollapse(group.game)}
+                  >
                     {GAME_LOGO[group.game] ? (
                       <Image source={GAME_LOGO[group.game]} style={styles.gameLogo} contentFit="contain" />
                     ) : (
@@ -269,18 +282,27 @@ export default function MatchsScreen() {
                     <Text variant="display.wordmark" tone="primary" style={styles.gameLabel}>
                       {GAME_LABEL[group.game] || group.game.toUpperCase()}
                     </Text>
-                  </View>
+                    <MaterialCommunityIcons
+                      name={isCollapsed ? 'chevron-down' : 'chevron-up'}
+                      size={20}
+                      color={Colors.text.muted}
+                    />
+                  </Pressable>
                 )}
-                <LeagueHeader
-                  name={group.leagueName}
-                  imageUrl={group.imageUrl}
-                  isFavorite={favorites.has(group.leagueName)}
-                  hasLive={group.matches.some((m) => m.status === 'running')}
-                  onToggleFavorite={() => toggleFavorite(group.leagueName)}
-                />
-                {group.matches.map((m) => (
-                  <MatchRow key={m.id} match={m} />
-                ))}
+                {!isCollapsed && (
+                  <>
+                    <LeagueHeader
+                      name={group.leagueName}
+                      imageUrl={group.imageUrl}
+                      isFavorite={favorites.has(group.leagueName)}
+                      hasLive={group.matches.some((m) => m.status === 'running')}
+                      onToggleFavorite={() => toggleFavorite(group.leagueName)}
+                    />
+                    {group.matches.map((m) => (
+                      <MatchRow key={m.id} match={m} />
+                    ))}
+                  </>
+                )}
               </View>
             );
           })}
@@ -301,7 +323,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.xs,
   },
-  gameLabel: { fontSize: 22, letterSpacing: 2 },
+  gameLabel: { flex: 1, fontSize: 22, letterSpacing: 2 },
   gameLogo: { width: 24, height: 24 },
   scrollContent: { paddingBottom: 80 },
   loader: { marginTop: 40 },
