@@ -2,8 +2,7 @@ name: Sync matches (Pandascore -> Supabase)
 
 on:
   schedule:
-    # Every 30 minutes (UTC)
-    - cron: '*/30 * * * *'
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 jobs:
