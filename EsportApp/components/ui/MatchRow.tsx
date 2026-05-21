@@ -27,10 +27,22 @@ export interface MatchRowProps {
   tournamentLogo?: string | null;
 }
 
-const EWC_LOGO = require('@/assets/images/logo-jeux/ewc-logo.png');
-const GC_LOGO = require('@/assets/images/logo-jeux/gamechangers.png');
-const isEWC = (n?: string) => !!n && (/^EWC\b/i.test(n) || /esports world cup/i.test(n));
-const isGC = (n?: string) => !!n && (/\bGC\b/i.test(n) || /game changers/i.test(n));
+// Tournaments → logos locaux. Premier match wins.
+const TOURNAMENT_LOGO_RULES: { pattern: RegExp; logo: any }[] = [
+  { pattern: /^EWC\b|esports world cup/i, logo: require('@/assets/images/logo-jeux/ewc-logo.png') },
+  { pattern: /\bGC\b|game changers/i, logo: require('@/assets/images/logo-jeux/gamechangers.png') },
+  { pattern: /\bRLCS\b/i, logo: require('@/assets/images/logo-jeux/RLCS.png') },
+  { pattern: /cs asia|csasia/i, logo: require('@/assets/images/logo-jeux/csasia.png') },
+  { pattern: /dreamleague|\bDDL\b/i, logo: require('@/assets/images/logo-jeux/dotaddl.png') },
+];
+
+const resolveTournamentLogo = (name?: string): any | null => {
+  if (!name) return null;
+  for (const { pattern, logo } of TOURNAMENT_LOGO_RULES) {
+    if (pattern.test(name)) return logo;
+  }
+  return null;
+};
 
 const formatTime = (iso: string): string => {
   const d = new Date(iso);
@@ -62,6 +74,7 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
   const ac1 = match.opponent1_acronym || computeAcronym(match.opponent1_name);
   const ac2 = match.opponent2_acronym || computeAcronym(match.opponent2_name);
   const bo = match.best_of || 0;
+  const localLogo = resolveTournamentLogo(tournamentName);
 
   const team1Color = winner === 2 ? '#6A6A78' : '#F0F0F5';
   const team2Color = winner === 1 ? '#6A6A78' : '#F0F0F5';
@@ -110,10 +123,8 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
                 <View style={styles.liveDot} />
                 <Text style={styles.liveLabel}>LIVE</Text>
               </View>
-            ) : isEWC(tournamentName) ? (
-              <Image source={EWC_LOGO} style={styles.tournamentLogo} contentFit="contain" />
-            ) : isGC(tournamentName) ? (
-              <Image source={GC_LOGO} style={styles.tournamentLogo} contentFit="contain" />
+            ) : localLogo ? (
+              <Image source={localLogo} style={styles.tournamentLogo} contentFit="contain" />
             ) : tournamentLogo ? (
               <Image source={{ uri: tournamentLogo }} style={styles.tournamentLogo} contentFit="contain" />
             ) : null}
