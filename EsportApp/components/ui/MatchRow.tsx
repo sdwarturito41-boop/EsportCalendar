@@ -78,14 +78,8 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
 
         {/* Center */}
         <View style={styles.center}>
-          {isLive && (
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveLabel}>LIVE</Text>
-            </View>
-          )}
           {showScore ? (
-            <Text style={[styles.score, isLive && styles.scoreLive]}>
+            <Text style={styles.score}>
               {match.opponent1_score} – {match.opponent2_score}
             </Text>
           ) : (
@@ -100,10 +94,15 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
         </View>
       </View>
 
-      {(tournamentName || bo > 0) && (
+      {(tournamentName || bo > 0 || isLive) && (
         <View style={styles.footer}>
           <View style={styles.footerLeft}>
-            {isEWC(tournamentName) ? (
+            {isLive ? (
+              <View style={styles.liveBadge}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveLabel}>LIVE</Text>
+              </View>
+            ) : isEWC(tournamentName) ? (
               <Image source={EWC_LOGO} style={styles.tournamentLogo} contentFit="contain" />
             ) : tournamentLogo ? (
               <Image source={{ uri: tournamentLogo }} style={styles.tournamentLogo} contentFit="contain" />
@@ -170,10 +169,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 18,
     color: '#F0F0F5',
-  },
-  scoreLive: {
-    fontSize: 15,
-    lineHeight: 17,
   },
   liveBadge: {
     flexDirection: 'row',

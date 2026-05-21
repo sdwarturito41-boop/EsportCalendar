@@ -160,6 +160,14 @@ export default function MatchsScreen() {
         grouped[key].push(m);
       });
 
+      const statusRank: Record<string, number> = { running: 0, not_started: 1, finished: 2 };
+      const sortMatches = (arr: Match[]) =>
+        [...arr].sort((a, b) => {
+          const sa = statusRank[a.status] ?? 3;
+          const sb = statusRank[b.status] ?? 3;
+          if (sa !== sb) return sa - sb;
+          return new Date(a.begin_at).getTime() - new Date(b.begin_at).getTime();
+        });
       const sorted = Object.entries(grouped)
         .map(([leagueName, matches]) => {
           const t = getTournament(matches[0]);
@@ -168,7 +176,7 @@ export default function MatchsScreen() {
             imageUrl: t?.image_url || null,
             tier: (t?.tier || 'unranked').toLowerCase(),
             game: (t?.game || 'unknown').toLowerCase(),
-            matches,
+            matches: sortMatches(matches),
           };
         })
         ;
