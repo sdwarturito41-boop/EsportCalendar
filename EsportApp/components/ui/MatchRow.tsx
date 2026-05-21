@@ -62,51 +62,52 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
 
   return (
     <Pressable onPress={() => router.push(`/match/${match.id}`)} style={styles.card}>
-      {/* Top row : time/live + acronymes + logos + BO ou score au centre */}
-      <View style={styles.topRow}>
-        <View style={styles.left}>
-          {isLive ? (
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-              <Text variant="ui.label" tone="live" style={styles.liveLabel}>LIVE</Text>
-            </View>
-          ) : !showScore ? (
-            <Text variant="display.score" tone="primary" style={styles.time}>
-              {formatTime(match.begin_at)}
-            </Text>
-          ) : null}
-        </View>
-
-        <View style={styles.matchup}>
+      <View style={styles.matchupRow}>
+        {/* Team 1 */}
+        <View style={[styles.teamSide, styles.teamLeft]}>
           <Text variant="display.score" tone="primary" numberOfLines={1} style={styles.acronym}>
             {ac1}
           </Text>
-          <TeamLogo uri={match.opponent1_logo} name={match.opponent1_name} size={32} />
+          <TeamLogo uri={match.opponent1_logo} name={match.opponent1_name} size={40} />
+        </View>
+
+        {/* Center : score si joué, sinon heure */}
+        <View style={styles.center}>
           {showScore ? (
-            <View style={styles.scoreCenter}>
-              <Text variant="display.score" tone={winner === 2 ? 'muted' : 'primary'} style={styles.scoreNum}>
+            <View style={styles.scoreRow}>
+              <Text variant="display.score" tone={winner === 2 ? 'muted' : 'primary'} style={styles.bigText}>
                 {match.opponent1_score}
               </Text>
               <Text variant="display.score" tone="muted" style={styles.scoreSep}>–</Text>
-              <Text variant="display.score" tone={winner === 1 ? 'muted' : 'primary'} style={styles.scoreNum}>
+              <Text variant="display.score" tone={winner === 1 ? 'muted' : 'primary'} style={styles.bigText}>
                 {match.opponent2_score}
               </Text>
             </View>
           ) : (
-            <Text variant="ui.label" tone="muted" style={styles.bo}>{bo ? `BO${bo}` : '/'}</Text>
+            <Text variant="display.score" tone="primary" style={styles.bigText}>
+              {formatTime(match.begin_at)}
+            </Text>
           )}
-          <TeamLogo uri={match.opponent2_logo} name={match.opponent2_name} size={32} />
+        </View>
+
+        {/* Team 2 */}
+        <View style={[styles.teamSide, styles.teamRight]}>
+          <TeamLogo uri={match.opponent2_logo} name={match.opponent2_name} size={40} />
           <Text variant="display.score" tone="primary" numberOfLines={1} style={styles.acronym}>
             {ac2}
           </Text>
         </View>
       </View>
 
-      {/* Footer : tournoi + format */}
-      {(tournamentName || bo) && (
+      {(tournamentName || bo > 0 || isLive) && (
         <View style={styles.footer}>
           <View style={styles.footerLeft}>
-            {tournamentLogo ? (
+            {isLive ? (
+              <View style={styles.liveBadge}>
+                <View style={styles.liveDot} />
+                <Text variant="ui.label" tone="live" style={styles.liveLabel}>LIVE</Text>
+              </View>
+            ) : tournamentLogo ? (
               <Image source={{ uri: tournamentLogo }} style={styles.tournamentLogo} contentFit="contain" />
             ) : (
               <View style={styles.tournamentLogoPlaceholder} />
@@ -118,9 +119,7 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
             )}
           </View>
           {bo > 0 && (
-            <Text variant="ui.label" tone="muted">
-              {bo === 1 ? 'BO1' : `SÉRIE DE ${bo}`}
-            </Text>
+            <Text variant="ui.label" tone="muted">{`BO${bo}`}</Text>
           )}
         </View>
       )}
@@ -136,48 +135,34 @@ const styles = StyleSheet.create({
     borderRadius: Radii.lg,
     overflow: 'hidden',
   },
-  topRow: {
+  matchupRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md + 2,
-    gap: Spacing.md,
-    minHeight: 64,
+    minHeight: 80,
   },
-  left: {
-    minWidth: 70,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  time: { fontSize: 24, lineHeight: 26 },
-  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.semantic.live },
-  liveLabel: { fontSize: 10, letterSpacing: 1.5 },
-  matchup: {
+  teamSide: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm + 2,
+    gap: Spacing.md,
   },
+  teamLeft: { justifyContent: 'flex-end' },
+  teamRight: { justifyContent: 'flex-start' },
   acronym: {
     fontSize: 20,
     lineHeight: 24,
-    minWidth: 48,
-    textAlign: 'center',
   },
-  scoreCenter: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    minWidth: 60,
+  center: {
+    minWidth: 84,
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
   },
-  scoreNum: { fontSize: 24, lineHeight: 26 },
-  scoreSep: { marginHorizontal: 4 },
-  bo: {
-    minWidth: 32,
-    textAlign: 'center',
-  },
+  scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
+  scoreSep: { marginHorizontal: 6, fontSize: 22 },
+  bigText: { fontSize: 26, lineHeight: 28 },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,7 +171,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm + 2,
     borderTopWidth: 1,
     borderTopColor: Colors.border.subtle,
-    backgroundColor: Colors.bg.page,
     gap: Spacing.sm,
   },
   footerLeft: {
@@ -195,10 +179,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  tournamentLogo: { width: 18, height: 18 },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.semantic.live },
+  liveLabel: { fontSize: 10, letterSpacing: 1.5 },
+  tournamentLogo: { width: 16, height: 16 },
   tournamentLogoPlaceholder: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     borderRadius: Radii.sm,
     backgroundColor: Colors.border.subtle,
   },
