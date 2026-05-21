@@ -50,6 +50,26 @@ const tierPriority: Record<string, number> = {
   unranked: 6,
 };
 
+const GAME_PRIORITY: Record<string, number> = {
+  valorant: 1,
+  cs2: 2,
+  lol: 3,
+  rl: 4,
+  dota2: 5,
+  ow: 6,
+  r6: 7,
+};
+
+const GAME_LABEL: Record<string, string> = {
+  valorant: 'VALORANT',
+  cs2: 'COUNTER-STRIKE 2',
+  lol: 'LEAGUE OF LEGENDS',
+  rl: 'ROCKET LEAGUE',
+  dota2: 'DOTA 2',
+  ow: 'OVERWATCH',
+  r6: 'RAINBOW SIX',
+};
+
 const getTournament = (match: Match): Tournament | null => {
   if (!match.tournaments) return null;
   return Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments;
@@ -113,11 +133,7 @@ export default function MatchsScreen() {
             matches,
           };
         })
-        .sort((a, b) => {
-          const pa = tierPriority[a.tier] || 999;
-          const pb = tierPriority[b.tier] || 999;
-          return pa !== pb ? pa - pb : a.leagueName.localeCompare(b.leagueName);
-        });
+        ;
 
       setGroupedMatches(sorted);
     } finally {
@@ -130,7 +146,19 @@ export default function MatchsScreen() {
   }, [fetchMatches]);
 
   const filteredGroups = useMemo(() => {
-    return groupedMatches
+    return [...groupedMatches]
+      .sort((a, b) => {
+        const aFav = favoriteGames.has(a.game) ? 0 : 1;
+        const bFav = favoriteGames.has(b.game) ? 0 : 1;
+        if (aFav !== bFav) return aFav - bFav;
+        const ga = GAME_PRIORITY[a.game] || 99;
+        const gb = GAME_PRIORITY[b.game] || 99;
+        if (ga !== gb) return ga - gb;
+        const pa = tierPriority[a.tier] || 999;
+        const pb = tierPriority[b.tier] || 999;
+        if (pa !== pb) return pa - pb;
+        return a.leagueName.localeCompare(b.leagueName);
+      })
       .filter((g) => game === 'all' || g.game === game)
       .map((g) => ({
         ...g,
@@ -194,20 +222,31 @@ export default function MatchsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {filteredGroups.map((group) => (
-            <View key={group.leagueName}>
-              <LeagueHeader
-                name={group.leagueName}
-                imageUrl={group.imageUrl}
-                isFavorite={favorites.has(group.leagueName)}
-                hasLive={group.matches.some((m) => m.status === 'running')}
-                onToggleFavorite={() => toggleFavorite(group.leagueName)}
-              />
-              {group.matches.map((m) => (
-                <MatchRow key={m.id} match={m} />
-              ))}
-            </View>
-          ))}
+          {filteredGroups.map((group, idx) => {
+            const prevGame = idx > 0 ? filteredGroups[idx - 1].game : null;
+            const showGameHeader = group.game !== prevGame;
+            return (
+              <View key={group.leagueName}>
+                {showGameHeader && (
+                  <View style={styles.gameSection}>
+                    <Text variant="display.wordmark" tone="primary" style={styles.gameLabel}>
+                      {GAME_LABEL[group.game] || group.game.toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+                <LeagueHeader
+                  name={group.leagueName}
+                  imageUrl={group.imageUrl}
+                  isFavorite={favorites.has(group.leagueName)}
+                  hasLive={group.matches.some((m) => m.status === 'running')}
+                  onToggleFavorite={() => toggleFavorite(group.leagueName)}
+                />
+                {group.matches.map((m) => (
+                  <MatchRow key={m.id} match={m} />
+                ))}
+              </View>
+            );
+          })}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -217,6 +256,12 @@ export default function MatchsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
   hairline: { height: 1, backgroundColor: Colors.border.subtle },
+  gameSection: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xs,
+  },
+  gameLabel: { fontSize: 22, letterSpacing: 2 },
   scrollContent: { paddingBottom: 80 },
   loader: { marginTop: 40 },
   empty: { paddingVertical: 80, alignItems: 'center', gap: Spacing.sm },
