@@ -303,20 +303,15 @@ export default function MatchsScreen() {
                     />
                   </Pressable>
                 )}
-                {!isCollapsed && (
-                  <View style={styles.tournamentBlock}>
-                    <LeagueHeader
-                      name={group.leagueName}
-                      imageUrl={group.imageUrl}
-                      isFavorite={favorites.has(group.leagueName)}
-                      hasLive={group.matches.some((m) => m.status === 'running')}
-                      onToggleFavorite={() => toggleFavorite(group.leagueName)}
+                {!isCollapsed &&
+                  group.matches.map((m) => (
+                    <MatchRow
+                      key={m.id}
+                      match={m}
+                      tournamentName={group.leagueName}
+                      tournamentLogo={group.imageUrl}
                     />
-                    {group.matches.map((m) => (
-                      <MatchRow key={m.id} match={m} />
-                    ))}
-                  </View>
-                )}
+                  ))}
               </View>
             );
           })}
