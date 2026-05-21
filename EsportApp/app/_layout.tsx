@@ -27,13 +27,15 @@ function AuthGate() {
       if (!inAuthGroup) router.replace('/login');
       return;
     }
-    // Session OK — vérifie l'onboarding
+    // Session OK — vérifie l'onboarding initial
     if (!profile?.onboarded_at) {
       if (!inOnboardingGroup) router.replace('/games');
       return;
     }
-    // Session + onboardé : sors des groupes auth/onboarding
-    if (inAuthGroup || inOnboardingGroup) router.replace('/');
+    // Session + onboardé : sors uniquement du groupe auth.
+    // On laisse l'utilisateur entrer dans (onboarding) volontairement
+    // pour éditer ses préférences depuis Profil.
+    if (inAuthGroup) router.replace('/');
   }, [session, profile, loading, segments, router]);
 
   if (loading) {

@@ -58,6 +58,7 @@ const getTournament = (match: Match): Tournament | null => {
 export default function MatchsScreen() {
   const { profile } = useAuth();
   const favoriteTeams = useMemo(() => new Set(profile?.favorite_teams || []), [profile]);
+  const favoriteGames = useMemo(() => new Set(profile?.favorite_games || []), [profile]);
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const d = new Date();
@@ -141,17 +142,19 @@ export default function MatchsScreen() {
                 if (filter === 'upcoming') return m.status === 'not_started';
                 if (filter === 'finished') return m.status === 'finished';
                 if (filter === 'favorites') {
-                  return (
+                  // Englobe : match dans un jeu favori OU avec une team
+                  // favorite OU dans une league marquée en session.
+                  const gameMatch = favoriteGames.has(g.game);
+                  const teamMatch =
                     favoriteTeams.has(m.opponent1_name) ||
-                    favoriteTeams.has(m.opponent2_name) ||
-                    favorites.has(g.leagueName)
-                  );
+                    favoriteTeams.has(m.opponent2_name);
+                  return gameMatch || teamMatch || favorites.has(g.leagueName);
                 }
                 return true;
               }),
       }))
       .filter((g) => g.matches.length > 0);
-  }, [groupedMatches, filter, game, favorites, favoriteTeams]);
+  }, [groupedMatches, filter, game, favorites, favoriteTeams, favoriteGames]);
 
   const toggleFavorite = (leagueName: string) => {
     setFavorites((prev) => {
