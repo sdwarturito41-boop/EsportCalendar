@@ -70,6 +70,16 @@ const GAME_LABEL: Record<string, string> = {
   r6: 'RAINBOW SIX',
 };
 
+const GAME_ICON: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
+  valorant: 'pistol',
+  cs2: 'target',
+  lol: 'sword',
+  rl: 'rocket-launch',
+  dota2: 'shield-sword',
+  ow: 'crosshairs',
+  r6: 'security',
+};
+
 const getTournament = (match: Match): Tournament | null => {
   if (!match.tournaments) return null;
   return Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments;
@@ -229,6 +239,11 @@ export default function MatchsScreen() {
               <View key={group.leagueName}>
                 {showGameHeader && (
                   <View style={styles.gameSection}>
+                    <MaterialCommunityIcons
+                      name={GAME_ICON[group.game] || 'gamepad-variant'}
+                      size={20}
+                      color={Colors.text.primary}
+                    />
                     <Text variant="display.wordmark" tone="primary" style={styles.gameLabel}>
                       {GAME_LABEL[group.game] || group.game.toUpperCase()}
                     </Text>
@@ -257,6 +272,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
   hairline: { height: 1, backgroundColor: Colors.border.subtle },
   gameSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.xs,
