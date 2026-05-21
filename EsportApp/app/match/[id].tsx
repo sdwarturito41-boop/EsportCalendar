@@ -9,6 +9,7 @@ import {
   Linking,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Colors, Spacing, Radii } from '@/constants/theme';
@@ -30,16 +31,28 @@ interface MatchDetail {
   begin_at: string;
   status: 'not_started' | 'running' | 'finished';
   best_of: number;
+  opponent1_id: number | null;
   opponent1_name: string;
   opponent1_acronym?: string | null;
   opponent1_logo: string | null;
   opponent1_score: number;
+  opponent2_id: number | null;
   opponent2_name: string;
   opponent2_acronym?: string | null;
   opponent2_logo: string | null;
   opponent2_score: number;
   stream_url: string | null;
   tournaments: Tournament;
+}
+
+interface TeamPlayer {
+  team_id: number;
+  player_id: number;
+  name: string | null;
+  image_url: string | null;
+  nationality: string | null;
+  first_name: string | null;
+  last_name: string | null;
 }
 
 const ExternalStatsButton: React.FC<{ source: string; url: string }> = ({ source, url }) => (
@@ -133,6 +146,7 @@ export default function MatchDetailScreen() {
   const [maps, setMaps] = useState<MatchMap[]>([]);
   const [stats, setStats] = useState<PlayerStat[]>([]);
   const [mapStats, setMapStats] = useState<MapPlayerStat[]>([]);
+  const [roster, setRoster] = useState<TeamPlayer[]>([]);
   const [expandedMap, setExpandedMap] = useState<number | null>(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -166,6 +180,16 @@ export default function MatchDetailScreen() {
         .eq('match_id', id)
         .order('map_position', { ascending: true });
       setMapStats((mapStatRows || []) as MapPlayerStat[]);
+      const m = data as MatchDetail;
+      const teamIds = [m.opponent1_id, m.opponent2_id].filter(Boolean) as number[];
+      if (teamIds.length) {
+        const { data: rosterRows } = await supabase
+          .from('team_players')
+          .select('team_id, player_id, name, image_url, nationality, first_name, last_name')
+          .in('team_id', teamIds)
+          .eq('active', true);
+        setRoster((rosterRows || []) as TeamPlayer[]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
@@ -461,12 +485,55 @@ export default function MatchDetailScreen() {
 
         {tab === 'rosters' && (
           <View style={styles.tabContent}>
-            <View style={styles.notice}>
-              <MaterialCommunityIcons name="information-outline" size={14} color={Colors.text.muted} />
-              <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
-                Photos et compositions des équipes bientôt — sync Pandascore en cours.
-              </Text>
-            </View>
+            {roster.length > 0 ? (
+              <>
+                {[
+                  { side: 1, id: match.opponent1_id, name: match.opponent1_name, logo: match.opponent1_logo },
+                  { side: 2, id: match.opponent2_id, name: match.opponent2_name, logo: match.opponent2_logo },
+                ].map((team) => {
+                  const teamPlayers = roster.filter((p) => p.team_id === team.id);
+                  if (!teamPlayers.length) return null;
+                  return (
+                    <View key={team.side} style={styles.rosterTeam}>
+                      <View style={styles.rosterTeamHeader}>
+                        <TeamLogo uri={team.logo} name={team.name} size={28} />
+                        <Text variant="ui.body" tone="primary" style={styles.rosterTeamName}>
+                          {team.name}
+                        </Text>
+                      </View>
+                      <View style={styles.rosterGrid}>
+                        {teamPlayers.map((p) => (
+                          <View key={p.player_id} style={styles.playerCard}>
+                            {p.image_url ? (
+                              <Image source={{ uri: p.image_url }} style={styles.playerPhoto} contentFit="cover" />
+                            ) : (
+                              <View style={[styles.playerPhoto, styles.playerPhotoPlaceholder]}>
+                                <MaterialCommunityIcons name="account" size={28} color={Colors.text.muted} />
+                              </View>
+                            )}
+                            <Text variant="ui.body" tone="primary" numberOfLines={1} style={styles.playerName}>
+                              {p.name || '?'}
+                            </Text>
+                            {!!(p.first_name || p.last_name) && (
+                              <Text variant="ui.caption" tone="muted" numberOfLines={1}>
+                                {[p.first_name, p.last_name].filter(Boolean).join(' ')}
+                              </Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  );
+                })}
+              </>
+            ) : (
+              <View style={styles.notice}>
+                <MaterialCommunityIcons name="information-outline" size={14} color={Colors.text.muted} />
+                <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
+                  Rosters en cours d'agrégation depuis Pandascore.
+                </Text>
+              </View>
+            )}
             <ExternalStatsButton
               source={statsSourceLabel(match.tournaments?.game)}
               url={buildStatsUrl(match.tournaments?.game, match.opponent1_name, match.opponent2_name)}
@@ -600,8 +667,22 @@ const styles = StyleSheet.create({
   mapName: {},
   mapScore: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
   mapScoreNum: { fontSize: 20 },
-  rosterTeam: { gap: Spacing.sm },
-  rosterTeamName: { paddingLeft: Spacing.xs },
+  rosterTeam: { gap: Spacing.sm, marginBottom: Spacing.md },
+  rosterTeamHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  rosterTeamName: { fontFamily: 'Geist-Bold' },
+  rosterGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  playerCard: {
+    width: '31%',
+    minWidth: 96,
+    backgroundColor: Colors.bg.surface,
+    borderRadius: Radii.md,
+    padding: Spacing.sm,
+    alignItems: 'center',
+    gap: 4,
+  },
+  playerPhoto: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.bg.elevated },
+  playerPhotoPlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  playerName: { fontFamily: 'Geist-Bold', textAlign: 'center' },
   statsTable: {
     backgroundColor: Colors.bg.surface,
     borderRadius: Radii.md,
