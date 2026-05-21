@@ -334,8 +334,6 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.md,
     marginTop: Spacing.sm,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border.subtle,
     overflow: 'hidden',
   },
   quickFilters: {

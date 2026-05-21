@@ -28,7 +28,12 @@ export const LeagueHeader: React.FC<LeagueHeaderProps> = ({
       ) : (
         <View style={styles.logoPlaceholder} />
       )}
-      <Text variant="ui.body" tone="primary" numberOfLines={1} style={styles.name}>
+      <Text
+        variant="ui.caption"
+        tone="primary"
+        numberOfLines={1}
+        style={[styles.name, { fontFamily: 'Geist-Bold', fontSize: 13 }]}
+      >
         {name}
       </Text>
       {hasLive && <LiveChip />}
@@ -48,10 +53,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md + 2,
+    paddingTop: Spacing.md + 2,
+    paddingBottom: Spacing.sm,
     gap: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border.subtle,
   },
   logo: {
     width: 22,
