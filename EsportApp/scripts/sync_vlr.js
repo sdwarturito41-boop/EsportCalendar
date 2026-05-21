@@ -68,6 +68,59 @@ const parseResultsPage = (html) => {
   return items;
 };
 
+// Parse les tableaux de stats joueurs sur la page match VLR.
+// Retourne deux arrays (un par équipe), chacun avec 5 joueurs + leurs stats agrégées.
+const parsePlayerStats = (html) => {
+  // 2 tables wf-table-inset mod-overview au top de la page (une par team).
+  // Plus tard, d'autres tables par map. On garde les 2 premières.
+  const tables = [...html.matchAll(/<table class="wf-table-inset mod-overview">([\s\S]*?)<\/table>/g)];
+  const result = [[], []];
+  for (let teamIdx = 0; teamIdx < Math.min(2, tables.length); teamIdx++) {
+    const rows = [...tables[teamIdx][1].matchAll(/<tr>([\s\S]*?)<\/tr>/g)];
+    // Skip header row (index 0)
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r][1];
+      // Nom du joueur : dans <a href="/player/..."> ... <div class="text-of">PSEUDO</div>
+      const nameMatch = row.match(/<a href="\/player\/[^"]+">[\s\S]*?<div[^>]*class="text-of"[^>]*>\s*([^<]+?)\s*</);
+      if (!nameMatch) continue;
+      const playerName = nameMatch[1].trim();
+      // Agent : <img src="/img/vlr/game/agents/AGENT.png" alt="AGENT"
+      const agentMatch = row.match(/agents\/([a-z]+)\.png/i);
+      const agent = agentMatch ? agentMatch[1].toLowerCase() : null;
+      // Stats : pour chaque mod-stat span class="side mod-both">VALUE
+      const bothValues = [...row.matchAll(/<span class="side[^"]*mod-both[^"]*"[^>]*>\s*([^<]+?)\s*</g)].map((m) => m[1].trim());
+      // Ordre des stats (selon le thead) :
+      //  0 = Rating, 1 = ACS, 2 = K, 3 = D, 4 = A, 5 = +/-, 6 = KAST, 7 = ADR, 8 = HS%, 9 = FK, 10 = FD, 11 = +/- (FK)
+      const stat = (idx, fn = (v) => v) => (bothValues[idx] != null ? fn(bothValues[idx]) : null);
+      const num = (v) => {
+        if (v == null) return null;
+        const n = parseInt(String(v).replace(/[^\d-]/g, ''), 10);
+        return Number.isNaN(n) ? null : n;
+      };
+      const numF = (v) => {
+        if (v == null) return null;
+        const n = parseFloat(String(v).replace(',', '.'));
+        return Number.isNaN(n) ? null : n;
+      };
+      result[teamIdx].push({
+        player_name: playerName,
+        agent,
+        rating: stat(0, numF),
+        acs: stat(1, num),
+        kills: stat(2, num),
+        deaths: stat(3, num),
+        assists: stat(4, num),
+        kast: stat(6),
+        adr: stat(7, num),
+        hs_pct: stat(8),
+        fk: stat(9, num),
+        fd: stat(10, num),
+      });
+    }
+  }
+  return result;
+};
+
 // Parse une page match VLR. Retourne [{position, map_name, score1, score2, team1_name, team2_name}]
 const parseMatchPage = (html) => {
   const games = [];
@@ -124,10 +177,14 @@ const parseMatchPage = (html) => {
     return;
   }
 
-  // Filtre ceux qui n'ont pas déjà de maps
+  // On considère un match déjà enrichi quand il a à la fois ses maps ET ses
+  // player stats. Si l'un manque (cas du backfill après ajout du scraping
+  // stats), on re-fetch.
   const { data: existingMaps } = await supabase.from('match_maps').select('match_id');
+  const { data: existingStats } = await supabase.from('match_player_stats').select('match_id');
   const haveMaps = new Set((existingMaps || []).map((m) => m.match_id));
-  const toFetch = finished.filter((m) => !haveMaps.has(m.id));
+  const haveStats = new Set((existingStats || []).map((m) => m.match_id));
+  const toFetch = finished.filter((m) => !haveMaps.has(m.id) || !haveStats.has(m.id));
   console.log(`${toFetch.length}/${finished.length} matchs Valo à enrichir`);
 
   if (!toFetch.length) {
@@ -176,6 +233,7 @@ const parseMatchPage = (html) => {
     try {
       const { data: matchHtml } = await VLR.get(vlrMatch.url);
       const games = parseMatchPage(matchHtml);
+      const playerStats = parsePlayerStats(matchHtml);
       if (!games.length) {
         notFound++;
         continue;
@@ -200,11 +258,34 @@ const parseMatchPage = (html) => {
         onConflict: 'match_id,position',
       });
       if (error) {
-        console.warn(`  ⚠️  ${m.id} :`, error.message);
+        console.warn(`  ⚠️  ${m.id} maps :`, error.message);
         continue;
       }
+
+      // 6. Insert player stats (aligned to opponent1 / opponent2)
+      // VLR's first table = top team (left). Pandascore opponent1 = first opponent in match.
+      // On utilise le même check de team alignment qu'au-dessus pour mapper team_side.
+      const firstGame = games[0];
+      const firstGameT1N = normalize(firstGame.team1_name);
+      const firstTeamIsOpp1 = opp1N.includes(firstGameT1N) || firstGameT1N.includes(opp1N);
+      const psRows = [];
+      playerStats.forEach((teamPlayers, teamIdxVlr) => {
+        // teamIdxVlr 0 = first VLR table, 1 = second.
+        // Si first table = opp1, alors teamIdxVlr 0 → team_side 1 ; sinon → team_side 2.
+        const teamSide = firstTeamIsOpp1 ? teamIdxVlr + 1 : 2 - teamIdxVlr;
+        teamPlayers.forEach((p) =>
+          psRows.push({ match_id: m.id, team_side: teamSide, ...p }),
+        );
+      });
+      if (psRows.length) {
+        const { error: psErr } = await supabase
+          .from('match_player_stats')
+          .upsert(psRows, { onConflict: 'match_id,team_side,player_name' });
+        if (psErr) console.warn(`  ⚠️  ${m.id} player_stats :`, psErr.message);
+      }
+
       enriched++;
-      console.log(`  ✓ ${m.opponent1_name} vs ${m.opponent2_name} (${rows.length} maps)`);
+      console.log(`  ✓ ${m.opponent1_name} vs ${m.opponent2_name} — ${rows.length} maps, ${psRows.length} joueurs`);
       await sleep(600);
     } catch (e) {
       console.warn(`  ⚠️  fetch ${vlrMatch.url} :`, e.message);

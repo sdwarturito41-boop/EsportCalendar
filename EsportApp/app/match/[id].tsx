@@ -108,11 +108,26 @@ interface MatchMap {
   score2: number;
 }
 
+interface PlayerStat {
+  team_side: number;
+  player_name: string;
+  agent: string | null;
+  rating: number | null;
+  acs: number | null;
+  kills: number | null;
+  deaths: number | null;
+  assists: number | null;
+  kast: string | null;
+  adr: number | null;
+  hs_pct: string | null;
+}
+
 export default function MatchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [match, setMatch] = useState<MatchDetail | null>(null);
   const [maps, setMaps] = useState<MatchMap[]>([]);
+  const [stats, setStats] = useState<PlayerStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>('resume');
@@ -134,6 +149,11 @@ export default function MatchDetailScreen() {
         .eq('match_id', id)
         .order('position', { ascending: true });
       setMaps((mapRows || []) as MatchMap[]);
+      const { data: statRows } = await supabase
+        .from('match_player_stats')
+        .select('team_side, player_name, agent, rating, acs, kills, deaths, assists, kast, adr, hs_pct')
+        .eq('match_id', id);
+      setStats((statRows || []) as PlayerStat[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
@@ -385,13 +405,56 @@ export default function MatchDetailScreen() {
 
         {tab === 'rosters' && (
           <View style={styles.tabContent}>
-            <View style={styles.notice}>
-              <MaterialCommunityIcons name="information-outline" size={14} color={Colors.text.muted} />
-              <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
-                Compositions et stats joueurs (K/D/A/ACS) pas exposées par Pandascore free.
-                Retrouve-les sur {statsSourceLabel(match.tournaments?.game)}.
-              </Text>
-            </View>
+            {stats.length > 0 ? (
+              <>
+                {[1, 2].map((side) => {
+                  const teamName = side === 1 ? match.opponent1_name : match.opponent2_name;
+                  const teamPlayers = stats.filter((p) => p.team_side === side);
+                  if (!teamPlayers.length) return null;
+                  return (
+                    <View key={side} style={styles.rosterTeam}>
+                      <Text variant="ui.label" tone="muted" style={styles.rosterTeamName}>
+                        {teamName}
+                      </Text>
+                      <View style={styles.statsTable}>
+                        <View style={styles.statsHeader}>
+                          <Text variant="ui.label" tone="muted" style={styles.colPlayer}>Joueur</Text>
+                          <Text variant="ui.label" tone="muted" style={styles.colNum}>ACS</Text>
+                          <Text variant="ui.label" tone="muted" style={styles.colNum}>K</Text>
+                          <Text variant="ui.label" tone="muted" style={styles.colNum}>D</Text>
+                          <Text variant="ui.label" tone="muted" style={styles.colNum}>A</Text>
+                        </View>
+                        {teamPlayers.map((p) => (
+                          <View key={p.player_name} style={styles.statsRow}>
+                            <View style={styles.colPlayer}>
+                              <Text variant="ui.body" tone="primary" numberOfLines={1}>
+                                {p.player_name}
+                              </Text>
+                              {!!p.agent && (
+                                <Text variant="ui.caption" tone="muted" style={styles.agentLabel}>
+                                  {p.agent}
+                                </Text>
+                              )}
+                            </View>
+                            <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.acs ?? '—'}</Text>
+                            <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.kills ?? '—'}</Text>
+                            <Text variant="ui.body" tone="muted" style={styles.colNum}>{p.deaths ?? '—'}</Text>
+                            <Text variant="ui.body" tone="primary" style={styles.colNum}>{p.assists ?? '—'}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  );
+                })}
+              </>
+            ) : (
+              <View style={styles.notice}>
+                <MaterialCommunityIcons name="information-outline" size={14} color={Colors.text.muted} />
+                <Text variant="ui.caption" tone="muted" style={{ flex: 1 }}>
+                  Stats joueurs en cours d'agrégation depuis VLR.gg ou pas dispo pour ce match.
+                </Text>
+              </View>
+            )}
             <ExternalStatsButton
               source={statsSourceLabel(match.tournaments?.game)}
               url={buildStatsUrl(match.tournaments?.game, match.opponent1_name, match.opponent2_name)}
@@ -523,4 +586,32 @@ const styles = StyleSheet.create({
   mapName: {},
   mapScore: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
   mapScoreNum: { fontSize: 20 },
+  rosterTeam: { gap: Spacing.sm },
+  rosterTeamName: { paddingLeft: Spacing.xs },
+  statsTable: {
+    backgroundColor: Colors.bg.surface,
+    borderRadius: Radii.md,
+    overflow: 'hidden',
+  },
+  statsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.subtle,
+    gap: Spacing.xs,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.subtle,
+  },
+  colPlayer: { flex: 2 },
+  colNum: { width: 36, textAlign: 'center' },
+  agentLabel: { textTransform: 'capitalize', marginTop: 2 },
 });
