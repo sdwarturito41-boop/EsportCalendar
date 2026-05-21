@@ -62,21 +62,9 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
   return (
     <Pressable onPress={() => router.push(`/match/${match.id}`)} style={styles.row}>
       <View style={styles.left}>
-        {showScore ? (
-          <View style={styles.scoreRow}>
-            <Text variant="display.score" tone={winner === 2 ? 'muted' : 'primary'}>
-              {match.opponent1_score}
-            </Text>
-            <Text variant="display.score" tone="muted" style={styles.scoreSep}>–</Text>
-            <Text variant="display.score" tone={winner === 1 ? 'muted' : 'primary'}>
-              {match.opponent2_score}
-            </Text>
-          </View>
-        ) : (
-          <Text variant="display.score" tone="primary" style={styles.time}>
-            {formatTime(match.begin_at)}
-          </Text>
-        )}
+        <Text variant="display.score" tone="primary" style={styles.time}>
+          {formatTime(match.begin_at)}
+        </Text>
         {isLive && (
           <View style={styles.liveDotRow}>
             <View style={styles.liveDot} />
@@ -90,7 +78,19 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
           {ac1}
         </Text>
         <TeamLogo uri={match.opponent1_logo} name={match.opponent1_name} size={28} />
-        <Text variant="ui.label" tone="muted" style={styles.bo}>{bo}</Text>
+        {showScore ? (
+          <View style={styles.scoreCenter}>
+            <Text variant="display.score" tone={winner === 2 ? 'muted' : 'primary'} style={styles.scoreNum}>
+              {match.opponent1_score}
+            </Text>
+            <Text variant="display.score" tone="muted" style={styles.scoreSep}>–</Text>
+            <Text variant="display.score" tone={winner === 1 ? 'muted' : 'primary'} style={styles.scoreNum}>
+              {match.opponent2_score}
+            </Text>
+          </View>
+        ) : (
+          <Text variant="ui.label" tone="muted" style={styles.bo}>{bo}</Text>
+        )}
         <TeamLogo uri={match.opponent2_logo} name={match.opponent2_name} size={28} />
         <Text variant="display.score" tone="primary" numberOfLines={1} style={styles.acronym}>
           {ac2}
@@ -117,7 +117,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   time: { fontSize: 22, lineHeight: 24 },
-  scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
+  scoreCenter: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    minWidth: 56,
+    justifyContent: 'center',
+  },
+  scoreNum: { fontSize: 22, lineHeight: 24 },
   scoreSep: { marginHorizontal: 4 },
   liveDotRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.semantic.live },
