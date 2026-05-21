@@ -71,14 +71,14 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md + 2,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border.subtle,
   },
   teamRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 40,
+    height: 46,
     gap: Spacing.md,
   },
   name: {
