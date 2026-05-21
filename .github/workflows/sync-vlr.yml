@@ -1,12 +1,14 @@
 name: Sync VLR maps (Valorant detail enrichment)
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
+  workflow_run:
+    workflows: ["Sync matches (Pandascore -> Supabase)", "Sync LIVE matches (Pandascore -> Supabase)"]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
   sync:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
