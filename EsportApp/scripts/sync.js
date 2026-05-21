@@ -46,9 +46,10 @@ const GAMES = [
   { key: 'lol', endpoint: '/lol/matches' },
   { key: 'rl', endpoint: '/rl/matches' },
   // Tier 2
+  { key: 'cod', endpoint: '/codmw/matches' },
   { key: 'dota2', endpoint: '/dota2/matches' },
-  { key: 'ow', endpoint: '/ow/matches' },
   { key: 'r6', endpoint: '/r6siege/matches' },
+  { key: 'ow', endpoint: '/ow/matches' },
 ];
 
 const fetchPaginated = async (endpoint, params = {}) => {

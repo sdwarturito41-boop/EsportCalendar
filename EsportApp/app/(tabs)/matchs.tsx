@@ -64,9 +64,10 @@ const GAME_PRIORITY: Record<string, number> = {
   lol: 2,
   cs2: 3,
   rl: 4,
-  dota2: 5,
-  r6: 6,
-  ow: 7,
+  cod: 5,
+  dota2: 6,
+  r6: 7,
+  ow: 8,
 };
 
 const GAME_LABEL: Record<string, string> = {
@@ -74,6 +75,7 @@ const GAME_LABEL: Record<string, string> = {
   cs2: 'COUNTER-STRIKE 2',
   lol: 'LEAGUE OF LEGENDS',
   rl: 'ROCKET LEAGUE',
+  cod: 'CALL OF DUTY',
   dota2: 'DOTA 2',
   ow: 'OVERWATCH',
   r6: 'RAINBOW SIX',
@@ -84,6 +86,7 @@ const GAME_ICON: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = 
   cs2: 'target',
   lol: 'sword',
   rl: 'rocket-launch',
+  cod: 'ammunition',
   dota2: 'shield-sword',
   ow: 'crosshairs',
   r6: 'security',

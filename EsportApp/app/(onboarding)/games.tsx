@@ -22,6 +22,7 @@ const TIER1: GameOption[] = [
 ];
 
 const TIER2: GameOption[] = [
+  { key: 'cod', label: 'Call of Duty', icon: 'ammunition' },
   { key: 'dota2', label: 'Dota 2', icon: 'shield-sword' },
   { key: 'r6', label: 'Rainbow Six', icon: 'security' },
   { key: 'ow', label: 'Overwatch', icon: 'crosshairs' },

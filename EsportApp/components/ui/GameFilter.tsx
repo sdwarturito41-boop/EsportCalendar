@@ -9,6 +9,7 @@ export type GameKey =
   | 'cs2'
   | 'lol'
   | 'rl'
+  | 'cod'
   | 'dota2'
   | 'ow'
   | 'r6';
@@ -19,6 +20,7 @@ const OPTIONS: { key: GameKey; label: string }[] = [
   { key: 'lol', label: 'LoL' },
   { key: 'cs2', label: 'CS2' },
   { key: 'rl', label: 'Rocket League' },
+  { key: 'cod', label: 'Call of Duty' },
   { key: 'dota2', label: 'Dota 2' },
   { key: 'r6', label: 'Rainbow Six' },
   { key: 'ow', label: 'Overwatch' },
