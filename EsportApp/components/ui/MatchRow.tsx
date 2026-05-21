@@ -32,6 +32,10 @@ const formatTime = (iso: string): string => {
   return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
+const EWC_LOGO = require('@/assets/images/logo-jeux/ewc-logo.png');
+const isEWC = (name?: string) =>
+  !!name && (/^EWC\b/i.test(name) || /esports world cup/i.test(name));
+
 const computeAcronym = (name: string): string => {
   if (!name || name === 'TBD') return 'TBD';
   const cleaned = name
@@ -107,6 +111,8 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
                 <View style={styles.liveDot} />
                 <Text variant="ui.label" tone="live" style={styles.liveLabel}>LIVE</Text>
               </View>
+            ) : isEWC(tournamentName) ? (
+              <Image source={EWC_LOGO} style={styles.tournamentLogo} contentFit="contain" />
             ) : tournamentLogo ? (
               <Image source={{ uri: tournamentLogo }} style={styles.tournamentLogo} contentFit="contain" />
             ) : (

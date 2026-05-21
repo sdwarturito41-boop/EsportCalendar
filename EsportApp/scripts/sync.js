@@ -95,13 +95,13 @@ const mapMatch = (m) => {
   };
 };
 
-const composeTournamentName = (m) => {
-  const tName = m.tournament?.name?.trim();
-  const sName = m.serie?.full_name?.trim();
-  const lName = m.league?.name?.trim();
+const abbreviate = (s) => (s || '').replace(/\bEsports World Cup\b/gi, 'EWC');
 
-  // Si serie.full_name est juste un nombre/année ("2026", "57"), il faut
-  // y préfixer le nom de la league sinon ça ne veut rien dire.
+const composeTournamentName = (m) => {
+  const tName = abbreviate(m.tournament?.name?.trim());
+  const sName = abbreviate(m.serie?.full_name?.trim());
+  const lName = abbreviate(m.league?.name?.trim());
+
   const serieIsTrivial = sName && /^\d+$/.test(sName);
   let main;
   if (serieIsTrivial && lName) main = `${lName} ${sName}`;
