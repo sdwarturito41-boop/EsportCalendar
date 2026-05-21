@@ -8,6 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 
 import { Colors, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
@@ -86,6 +87,15 @@ const GAME_ICON: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = 
   dota2: 'shield-sword',
   ow: 'crosshairs',
   r6: 'security',
+};
+
+// Logos PNG/WebP locaux dans assets/images/logo-jeux/.
+// Si dispo on les utilise, sinon fallback sur GAME_ICON (MaterialCommunityIcons).
+const GAME_LOGO: Record<string, any> = {
+  valorant: require('@/assets/images/logo-jeux/valorant-logo.png'),
+  cs2: require('@/assets/images/logo-jeux/cs2.webp'),
+  lol: require('@/assets/images/logo-jeux/lol-logo.png'),
+  rl: require('@/assets/images/logo-jeux/rl-logo.png'),
 };
 
 const getTournament = (match: Match): Tournament | null => {
@@ -247,11 +257,15 @@ export default function MatchsScreen() {
               <View key={group.leagueName}>
                 {showGameHeader && (
                   <View style={styles.gameSection}>
-                    <MaterialCommunityIcons
-                      name={GAME_ICON[group.game] || 'gamepad-variant'}
-                      size={20}
-                      color={Colors.text.primary}
-                    />
+                    {GAME_LOGO[group.game] ? (
+                      <Image source={GAME_LOGO[group.game]} style={styles.gameLogo} contentFit="contain" />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name={GAME_ICON[group.game] || 'gamepad-variant'}
+                        size={22}
+                        color={Colors.text.primary}
+                      />
+                    )}
                     <Text variant="display.wordmark" tone="primary" style={styles.gameLabel}>
                       {GAME_LABEL[group.game] || group.game.toUpperCase()}
                     </Text>
@@ -288,6 +302,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xs,
   },
   gameLabel: { fontSize: 22, letterSpacing: 2 },
+  gameLogo: { width: 24, height: 24 },
   scrollContent: { paddingBottom: 80 },
   loader: { marginTop: 40 },
   empty: { paddingVertical: 80, alignItems: 'center', gap: Spacing.sm },
