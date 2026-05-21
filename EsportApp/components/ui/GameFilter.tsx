@@ -16,12 +16,12 @@ export type GameKey =
 const OPTIONS: { key: GameKey; label: string }[] = [
   { key: 'all', label: 'Tous' },
   { key: 'valorant', label: 'Valorant' },
-  { key: 'cs2', label: 'CS2' },
   { key: 'lol', label: 'LoL' },
+  { key: 'cs2', label: 'CS2' },
   { key: 'rl', label: 'Rocket League' },
   { key: 'dota2', label: 'Dota 2' },
-  { key: 'ow', label: 'Overwatch' },
   { key: 'r6', label: 'Rainbow Six' },
+  { key: 'ow', label: 'Overwatch' },
 ];
 
 export interface GameFilterProps {

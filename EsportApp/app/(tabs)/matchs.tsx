@@ -50,14 +50,22 @@ const tierPriority: Record<string, number> = {
   unranked: 6,
 };
 
+// Ordre stratégique LOBBY (cible FR/EU, EWC focus) :
+// 1. Valorant — EWC flagship + base FR
+// 2. LoL — plus grande base fans FR/EU
+// 3. CS2 — core gaming FR (KC, Vitality)
+// 4. Rocket League — très suivi FR
+// 5. Dota 2 — EWC majeur, prize pool
+// 6. Rainbow Six — grosse scène FR (Vitality, BDS)
+// 7. Overwatch
 const GAME_PRIORITY: Record<string, number> = {
   valorant: 1,
-  cs2: 2,
-  lol: 3,
+  lol: 2,
+  cs2: 3,
   rl: 4,
   dota2: 5,
-  ow: 6,
-  r6: 7,
+  r6: 6,
+  ow: 7,
 };
 
 const GAME_LABEL: Record<string, string> = {

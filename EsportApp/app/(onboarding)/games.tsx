@@ -16,15 +16,15 @@ interface GameOption {
 
 const TIER1: GameOption[] = [
   { key: 'valorant', label: 'Valorant', icon: 'pistol' },
-  { key: 'cs2', label: 'Counter-Strike 2', icon: 'target' },
   { key: 'lol', label: 'League of Legends', icon: 'sword' },
+  { key: 'cs2', label: 'Counter-Strike 2', icon: 'target' },
   { key: 'rl', label: 'Rocket League', icon: 'rocket-launch' },
 ];
 
 const TIER2: GameOption[] = [
   { key: 'dota2', label: 'Dota 2', icon: 'shield-sword' },
-  { key: 'ow', label: 'Overwatch', icon: 'crosshairs' },
   { key: 'r6', label: 'Rainbow Six', icon: 'security' },
+  { key: 'ow', label: 'Overwatch', icon: 'crosshairs' },
 ];
 
 export default function GamesScreen() {
