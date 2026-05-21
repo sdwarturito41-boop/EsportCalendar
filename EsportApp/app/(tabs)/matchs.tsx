@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Pressable,
+  RefreshControl,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -118,6 +119,7 @@ export default function MatchsScreen() {
   });
   const [groupedMatches, setGroupedMatches] = useState<TournamentGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [favOnly, setFavOnly] = useState(false);
   const [liveOnly, setLiveOnly] = useState(false);
 
@@ -138,9 +140,9 @@ export default function MatchsScreen() {
     });
   };
 
-  const fetchMatches = useCallback(async () => {
+  const fetchMatches = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const start = new Date(selectedDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(selectedDate);
@@ -193,6 +195,23 @@ export default function MatchsScreen() {
   useEffect(() => {
     fetchMatches();
   }, [fetchMatches]);
+
+  // Auto-refresh toutes les 30s quand au moins un match est LIVE
+  const hasLive = useMemo(
+    () => groupedMatches.some((g) => g.matches.some((m) => m.status === 'running')),
+    [groupedMatches],
+  );
+  useEffect(() => {
+    if (!hasLive) return;
+    const t = setInterval(() => fetchMatches(true), 30000);
+    return () => clearInterval(t);
+  }, [hasLive, fetchMatches]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchMatches(true);
+    setRefreshing(false);
+  };
 
   const filteredGroups = useMemo(() => {
     return [...groupedMatches]
@@ -283,6 +302,13 @@ export default function MatchsScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Colors.accent.indigo}
+            />
+          }
         >
           {filteredGroups.map((group, idx) => {
             const prevGame = idx > 0 ? filteredGroups[idx - 1].game : null;
