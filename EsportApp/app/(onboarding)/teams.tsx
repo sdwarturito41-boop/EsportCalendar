@@ -18,6 +18,17 @@ import { TeamLogo } from '@/components/ui/TeamLogo';
 import { useAuth } from '@/lib/auth';
 import { listTeamsForGames, saveOnboarding } from '@/lib/profile';
 
+const GAME_LABELS: Record<string, string> = {
+  valorant: 'Valorant',
+  cs2: 'CS2',
+  lol: 'LoL',
+  rl: 'Rocket League',
+  dota2: 'Dota 2',
+  ow: 'Overwatch',
+  r6: 'Rainbow Six',
+};
+const gameLabel = (g: string) => GAME_LABELS[g] || g;
+
 export default function TeamsScreen() {
   const router = useRouter();
   const { games: gamesParam } = useLocalSearchParams<{ games: string }>();
@@ -109,9 +120,7 @@ export default function TeamsScreen() {
                 <TeamLogo uri={t.logo} name={t.name} size={28} />
                 <View style={{ flex: 1 }}>
                   <Text variant="ui.body" tone="primary" numberOfLines={1}>{t.name}</Text>
-                  <Text variant="ui.caption" tone="muted">
-                    {t.game === 'cs2' ? 'CS2' : t.game.charAt(0).toUpperCase() + t.game.slice(1)}
-                  </Text>
+                  <Text variant="ui.caption" tone="muted">{gameLabel(t.game)}</Text>
                 </View>
                 <View style={[styles.check, active && styles.checkActive]}>
                   {active && <MaterialCommunityIcons name="check" size={14} color={Colors.text.primary} />}

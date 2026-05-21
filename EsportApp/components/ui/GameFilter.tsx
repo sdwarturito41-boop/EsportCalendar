@@ -3,13 +3,25 @@ import { Pressable, ScrollView, View, StyleSheet } from 'react-native';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from './Text';
 
-export type GameKey = 'all' | 'valorant' | 'cs2' | 'rl';
+export type GameKey =
+  | 'all'
+  | 'valorant'
+  | 'cs2'
+  | 'lol'
+  | 'rl'
+  | 'dota2'
+  | 'ow'
+  | 'r6';
 
 const OPTIONS: { key: GameKey; label: string }[] = [
   { key: 'all', label: 'Tous' },
   { key: 'valorant', label: 'Valorant' },
   { key: 'cs2', label: 'CS2' },
+  { key: 'lol', label: 'LoL' },
   { key: 'rl', label: 'Rocket League' },
+  { key: 'dota2', label: 'Dota 2' },
+  { key: 'ow', label: 'Overwatch' },
+  { key: 'r6', label: 'Rainbow Six' },
 ];
 
 export interface GameFilterProps {

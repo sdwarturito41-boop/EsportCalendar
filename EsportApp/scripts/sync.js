@@ -33,9 +33,15 @@ const FUTURE_DAYS = 14;
 const ALLOWED_TIERS = new Set(['s', 'a']);
 
 const GAMES = [
+  // Tier 1
   { key: 'valorant', endpoint: '/valorant/matches' },
   { key: 'cs2', endpoint: '/csgo/matches' },
+  { key: 'lol', endpoint: '/lol/matches' },
   { key: 'rl', endpoint: '/rl/matches' },
+  // Tier 2
+  { key: 'dota2', endpoint: '/dota2/matches' },
+  { key: 'ow', endpoint: '/ow/matches' },
+  { key: 'r6', endpoint: '/r6siege/matches' },
 ];
 
 const fetchPaginated = async (endpoint, params = {}) => {

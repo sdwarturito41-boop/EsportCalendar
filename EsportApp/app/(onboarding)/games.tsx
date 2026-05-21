@@ -14,10 +14,17 @@ interface GameOption {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
-const GAMES: GameOption[] = [
+const TIER1: GameOption[] = [
   { key: 'valorant', label: 'Valorant', icon: 'pistol' },
   { key: 'cs2', label: 'Counter-Strike 2', icon: 'target' },
+  { key: 'lol', label: 'League of Legends', icon: 'sword' },
   { key: 'rl', label: 'Rocket League', icon: 'rocket-launch' },
+];
+
+const TIER2: GameOption[] = [
+  { key: 'dota2', label: 'Dota 2', icon: 'shield-sword' },
+  { key: 'ow', label: 'Overwatch', icon: 'crosshairs' },
+  { key: 'r6', label: 'Rainbow Six', icon: 'security' },
 ];
 
 export default function GamesScreen() {
@@ -41,6 +48,29 @@ export default function GamesScreen() {
     });
   };
 
+  const renderGame = (g: GameOption) => {
+    const active = selected.has(g.key);
+    return (
+      <Pressable
+        key={g.key}
+        onPress={() => toggle(g.key)}
+        style={[styles.card, active && styles.cardActive]}
+      >
+        <MaterialCommunityIcons
+          name={g.icon}
+          size={24}
+          color={active ? Colors.accent.indigo : Colors.text.muted}
+        />
+        <Text variant="ui.body" tone={active ? 'accent' : 'primary'} style={styles.cardLabel}>
+          {g.label}
+        </Text>
+        <View style={[styles.check, active && styles.checkActive]}>
+          {active && <MaterialCommunityIcons name="check" size={14} color={Colors.text.primary} />}
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -53,32 +83,15 @@ export default function GamesScreen() {
           </Text>
         </View>
 
-        <View style={styles.grid}>
-          {GAMES.map((g) => {
-            const active = selected.has(g.key);
-            return (
-              <Pressable
-                key={g.key}
-                onPress={() => toggle(g.key)}
-                style={[styles.card, active && styles.cardActive]}
-              >
-                <MaterialCommunityIcons
-                  name={g.icon}
-                  size={28}
-                  color={active ? Colors.accent.indigo : Colors.text.muted}
-                />
-                <Text variant="ui.title" tone={active ? 'accent' : 'primary'} style={styles.cardLabel}>
-                  {g.label}
-                </Text>
-                <View style={[styles.check, active && styles.checkActive]}>
-                  {active && (
-                    <MaterialCommunityIcons name="check" size={14} color={Colors.text.primary} />
-                  )}
-                </View>
-              </Pressable>
-            );
-          })}
+        <View style={styles.sectionHeader}>
+          <Text variant="ui.label" tone="muted">Tier 1 · Les grands</Text>
         </View>
+        <View style={styles.grid}>{TIER1.map(renderGame)}</View>
+
+        <View style={[styles.sectionHeader, { marginTop: Spacing.xl }]}>
+          <Text variant="ui.label" tone="muted">Tier 2 · Autres compétitifs</Text>
+        </View>
+        <View style={styles.grid}>{TIER2.map(renderGame)}</View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -91,9 +104,7 @@ export default function GamesScreen() {
             pressed && styles.ctaPressed,
           ]}
         >
-          <Text variant="ui.label" tone="primary">
-            Continuer ({selected.size})
-          </Text>
+          <Text variant="ui.label" tone="primary">Continuer ({selected.size})</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -103,16 +114,17 @@ export default function GamesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
   scroll: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.xl },
-  hero: { marginBottom: Spacing.xxl, gap: Spacing.xs },
+  hero: { marginBottom: Spacing.xl, gap: Spacing.xs },
   subtitle: { marginTop: Spacing.xs },
-  grid: { gap: Spacing.md },
+  sectionHeader: { marginBottom: Spacing.md },
+  grid: { gap: Spacing.sm },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    padding: Spacing.lg,
+    padding: Spacing.md,
     backgroundColor: Colors.bg.surface,
-    borderRadius: Radii.lg,
+    borderRadius: Radii.md,
     borderWidth: 1,
     borderColor: Colors.border.subtle,
   },
@@ -122,9 +134,9 @@ const styles = StyleSheet.create({
   },
   cardLabel: { flex: 1 },
   check: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 1.5,
     borderColor: Colors.border.subtle,
     alignItems: 'center',
