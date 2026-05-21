@@ -14,19 +14,27 @@ export const unstable_settings = {
 };
 
 function AuthGate() {
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
     if (loading) return;
     const inAuthGroup = segments[0] === '(auth)';
-    if (!session && !inAuthGroup) {
-      router.replace('/login');
-    } else if (session && inAuthGroup) {
-      router.replace('/');
+    const inOnboardingGroup = segments[0] === '(onboarding)';
+
+    if (!session) {
+      if (!inAuthGroup) router.replace('/login');
+      return;
     }
-  }, [session, loading, segments, router]);
+    // Session OK — vérifie l'onboarding
+    if (!profile?.onboarded_at) {
+      if (!inOnboardingGroup) router.replace('/games');
+      return;
+    }
+    // Session + onboardé : sors des groupes auth/onboarding
+    if (inAuthGroup || inOnboardingGroup) router.replace('/');
+  }, [session, profile, loading, segments, router]);
 
   if (loading) {
     return (
@@ -45,6 +53,7 @@ function AuthGate() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(onboarding)" />
       <Stack.Screen name="match/[id]" />
     </Stack>
   );
