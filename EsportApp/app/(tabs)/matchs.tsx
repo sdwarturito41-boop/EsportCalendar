@@ -304,7 +304,7 @@ export default function MatchsScreen() {
                   </Pressable>
                 )}
                 {!isCollapsed && (
-                  <View style={styles.tournamentCard}>
+                  <View style={styles.tournamentBlock}>
                     <LeagueHeader
                       name={group.leagueName}
                       imageUrl={group.imageUrl}
@@ -329,12 +329,14 @@ export default function MatchsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
   hairline: { height: 1, backgroundColor: Colors.border.subtle },
-  tournamentCard: {
-    backgroundColor: Colors.bg.surface,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.sm,
-    borderRadius: 12,
-    overflow: 'hidden',
+  tournamentBlock: {
+    marginTop: Spacing.md,
+  },
+  tournamentDivider: {
+    height: 1,
+    backgroundColor: Colors.border.subtle,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
   },
   quickFilters: {
     flexDirection: 'row',
