@@ -32,6 +32,13 @@ const PAST_DAYS = 3;
 const FUTURE_DAYS = 14;
 const ALLOWED_TIERS = new Set(['s', 'a']);
 
+// Patterns toujours inclus même si Pandascore les classe hors S/A.
+// Pandascore sous-évalue parfois des circuits officiels (Riot Game Changers
+// classé Tier D, par ex.) — on les fait passer manuellement.
+const ALWAYS_INCLUDE_PATTERNS = [
+  /game changers/i,
+];
+
 const GAMES = [
   // Tier 1
   { key: 'valorant', endpoint: '/valorant/matches' },
@@ -139,8 +146,13 @@ const syncGame = async ({ key, endpoint }) => {
   const all = await fetchPaginated(endpoint, { 'range[begin_at]': range, sort: 'begin_at' });
   console.log(`  fetched : ${all.length}`);
 
-  const filtered = all.filter((m) => ALLOWED_TIERS.has((m.tournament?.tier || '').toLowerCase()));
-  console.log(`  tier S/A : ${filtered.length}`);
+  const filtered = all.filter((m) => {
+    const tier = (m.tournament?.tier || '').toLowerCase();
+    if (ALLOWED_TIERS.has(tier)) return true;
+    const haystack = `${m.serie?.full_name || ''} ${m.league?.name || ''} ${m.tournament?.name || ''}`;
+    return ALWAYS_INCLUDE_PATTERNS.some((p) => p.test(haystack));
+  });
+  console.log(`  tier S/A + whitelist : ${filtered.length}`);
 
   if (!filtered.length) return { tournaments: [], matches: [] };
 
@@ -161,17 +173,20 @@ const syncGame = async ({ key, endpoint }) => {
 };
 
 const cleanupNonTopTier = async () => {
-  console.log('\n--- 🧹 Cleanup tournois hors S/A ---');
-  const { data: bad } = await supabase
-    .from('tournaments')
-    .select('id')
-    .not('tier', 'in', '("s","a")');
-  const ids = (bad || []).map((t) => t.id);
+  console.log('\n--- 🧹 Cleanup tournois hors S/A (sauf whitelist) ---');
+  const { data: all } = await supabase.from('tournaments').select('id, name, tier');
+  const ids = (all || [])
+    .filter((t) => {
+      const tier = (t.tier || '').toLowerCase();
+      if (ALLOWED_TIERS.has(tier)) return false;
+      if (ALWAYS_INCLUDE_PATTERNS.some((p) => p.test(t.name || ''))) return false;
+      return true;
+    })
+    .map((t) => t.id);
   if (!ids.length) {
     console.log('  rien à nettoyer');
     return;
   }
-  // Delete matches first (FK), puis les tournois.
   const CHUNK = 200;
   for (let i = 0; i < ids.length; i += CHUNK) {
     const slice = ids.slice(i, i + CHUNK);
