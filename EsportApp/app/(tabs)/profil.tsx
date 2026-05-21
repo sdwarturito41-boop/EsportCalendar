@@ -6,10 +6,13 @@ import { Colors, Spacing, Radii } from '@/constants/theme';
 import { Text } from '@/components/ui/Text';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Surface } from '@/components/ui/Surface';
+import { useAuth } from '@/lib/auth';
 
 let handlerSet = false;
 
 export default function ProfilScreen() {
+  const { session, signOut } = useAuth();
+
   const requestPermissions = async () => {
     const Notifications = await import('expo-notifications');
     const Device = await import('expo-device');
@@ -66,7 +69,7 @@ export default function ProfilScreen() {
           <MaterialCommunityIcons name="account" size={56} color={Colors.text.muted} />
         </View>
         <Text variant="ui.title" tone="primary" style={{ marginTop: Spacing.md }}>
-          Utilisateur Esport
+          {session?.user?.email || 'Utilisateur'}
         </Text>
 
         <View style={styles.section}>
@@ -94,11 +97,16 @@ export default function ProfilScreen() {
 
         <View style={styles.section}>
           <Text variant="ui.label" tone="muted" style={styles.sectionTitle}>
-            Paramètres
+            Compte
           </Text>
-          <Surface level="surface" radius="md" padding="lg" bordered style={styles.empty}>
-            <Text variant="ui.caption" tone="muted">Plus d'options à venir.</Text>
-          </Surface>
+          <Pressable onPress={signOut} style={({ pressed }) => [pressed && styles.pressed]}>
+            <Surface level="surface" radius="md" padding="md" bordered style={styles.row}>
+              <MaterialCommunityIcons name="logout" size={20} color={Colors.semantic.loss} />
+              <Text variant="ui.body" tone="loss" style={{ flex: 1 }}>
+                Se déconnecter
+              </Text>
+            </Surface>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

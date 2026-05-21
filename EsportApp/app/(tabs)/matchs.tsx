@@ -8,9 +8,9 @@ import {
   Pressable,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { createClient } from '@supabase/supabase-js';
 
 import { Colors, Spacing } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
 import { Text } from '@/components/ui/Text';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { MatchRow, MatchRowMatch } from '@/components/ui/MatchRow';
@@ -18,10 +18,6 @@ import { LeagueHeader } from '@/components/ui/LeagueHeader';
 import { FilterTabs, FilterKey } from '@/components/ui/FilterTabs';
 import { GameFilter, GameKey } from '@/components/ui/GameFilter';
 import { DateBar } from '@/components/ui/DateBar';
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 interface Tournament {
   id: string;
@@ -71,10 +67,6 @@ export default function MatchsScreen() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const fetchMatches = useCallback(async () => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
     try {
       setLoading(true);
       const start = new Date(selectedDate);

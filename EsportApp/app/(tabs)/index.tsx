@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { createClient } from '@supabase/supabase-js';
 
 import { Colors, Spacing } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
 import { Text } from '@/components/ui/Text';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LiveChip } from '@/components/ui/LiveChip';
@@ -20,10 +20,6 @@ import { CompactMatchCard } from '@/components/ui/CompactMatchCard';
 import { NewsCard, NewsItem } from '@/components/ui/NewsCard';
 import { MatchRowMatch } from '@/components/ui/MatchRow';
 import { fetchNews } from '@/lib/news';
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 interface Tournament {
   id: string;
@@ -51,10 +47,6 @@ export default function HomeScreen() {
   const [news, setNews] = useState<NewsItem[]>([]);
 
   const fetchData = useCallback(async () => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
       const start = new Date();

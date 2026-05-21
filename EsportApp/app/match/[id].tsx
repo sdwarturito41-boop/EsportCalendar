@@ -11,17 +11,13 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { createClient } from '@supabase/supabase-js';
 
 import { Colors, Spacing, Radii } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
 import { Text } from '@/components/ui/Text';
 import { TeamLogo } from '@/components/ui/TeamLogo';
 import { LiveChip } from '@/components/ui/LiveChip';
 import { StreamEmbed } from '@/components/ui/StreamEmbed';
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 interface Tournament {
   id: string;
@@ -83,7 +79,6 @@ export default function MatchDetailScreen() {
       setLoading(true);
       setError(null);
       if (!id) throw new Error('ID du match manquant');
-      if (!supabase) throw new Error('Supabase non configuré');
 
       const { data, error: sbError } = await supabase
         .from('matches')
