@@ -84,6 +84,12 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
       onPress={() => router.push(`/match/${match.id}`)}
       style={[styles.card, isLive && styles.cardLive]}
     >
+      {isLive && (
+        <View style={styles.liveBadgeAbs}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveLabel}>LIVE</Text>
+        </View>
+      )}
       <View style={styles.matchupRow}>
         {/* Team 1 */}
         <View style={[styles.teamSide, styles.teamLeft]}>
@@ -118,12 +124,7 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
       {(tournamentName || bo > 0 || isLive) && (
         <View style={styles.footer}>
           <View style={styles.footerLeft}>
-            {isLive ? (
-              <View style={styles.liveBadge}>
-                <View style={styles.liveDot} />
-                <Text style={styles.liveLabel}>LIVE</Text>
-              </View>
-            ) : localLogo ? (
+            {localLogo ? (
               <Image source={localLogo} style={styles.tournamentLogo} contentFit="contain" />
             ) : tournamentLogo ? (
               <Image source={{ uri: tournamentLogo }} style={styles.tournamentLogo} contentFit="contain" />
@@ -194,11 +195,14 @@ const styles = StyleSheet.create({
   },
   scoreSep: { color: '#6A6A78', marginHorizontal: 4 },
   scoreLoser: { color: '#6A6A78' },
-  liveBadge: {
+  liveBadgeAbs: {
+    position: 'absolute',
+    top: 8,
+    right: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    marginBottom: 2,
+    gap: 4,
+    zIndex: 1,
   },
   liveDot: {
     width: 5,
