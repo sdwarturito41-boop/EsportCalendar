@@ -95,7 +95,21 @@ const mapMatch = (m) => {
   };
 };
 
-const abbreviate = (s) => (s || '').replace(/\bEsports World Cup\b/gi, 'EWC');
+const ABBREVIATIONS = [
+  [/\bEsports World Cup\b/gi, 'EWC'],
+  [/\bGame Changers\b/gi, 'GC'],
+  [/\bNorth America\b/gi, 'NA'],
+  [/\bLatin America\b/gi, 'LATAM'],
+  [/\bAsia[- ]Pacific\b/gi, 'APAC'],
+  [/\bChallengers\b/gi, 'Challengers'], // keep but tag
+  [/\b20\d{2}\b/g, ''], // virer les années (toutes au présent)
+];
+
+const abbreviate = (s) =>
+  ABBREVIATIONS.reduce((acc, [re, repl]) => acc.replace(re, repl), s || '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*·\s*$/, '')
+    .trim();
 
 const composeTournamentName = (m) => {
   const tName = abbreviate(m.tournament?.name?.trim());
