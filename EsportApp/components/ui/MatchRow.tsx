@@ -28,7 +28,9 @@ export interface MatchRowProps {
 }
 
 const EWC_LOGO = require('@/assets/images/logo-jeux/ewc-logo.png');
+const GC_LOGO = require('@/assets/images/logo-jeux/gamechangers.png');
 const isEWC = (n?: string) => !!n && (/^EWC\b/i.test(n) || /esports world cup/i.test(n));
+const isGC = (n?: string) => !!n && (/\bGC\b/i.test(n) || /game changers/i.test(n));
 
 const formatTime = (iso: string): string => {
   const d = new Date(iso);
@@ -110,6 +112,8 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
               </View>
             ) : isEWC(tournamentName) ? (
               <Image source={EWC_LOGO} style={styles.tournamentLogo} contentFit="contain" />
+            ) : isGC(tournamentName) ? (
+              <Image source={GC_LOGO} style={styles.tournamentLogo} contentFit="contain" />
             ) : tournamentLogo ? (
               <Image source={{ uri: tournamentLogo }} style={styles.tournamentLogo} contentFit="contain" />
             ) : null}
