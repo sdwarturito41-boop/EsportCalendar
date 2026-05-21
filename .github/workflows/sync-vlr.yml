@@ -1,0 +1,33 @@
+name: Sync VLR maps (Valorant detail enrichment)
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: EsportApp/package-lock.json
+
+      - name: Install deps
+        working-directory: EsportApp
+        run: npm ci --no-audit --no-fund
+
+      - name: Run VLR sync
+        working-directory: EsportApp
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sync_vlr.js
