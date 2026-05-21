@@ -304,7 +304,7 @@ export default function MatchsScreen() {
                   </Pressable>
                 )}
                 {!isCollapsed && (
-                  <>
+                  <View style={styles.tournamentCard}>
                     <LeagueHeader
                       name={group.leagueName}
                       imageUrl={group.imageUrl}
@@ -312,12 +312,10 @@ export default function MatchsScreen() {
                       hasLive={group.matches.some((m) => m.status === 'running')}
                       onToggleFavorite={() => toggleFavorite(group.leagueName)}
                     />
-                    <View style={styles.matchesBlock}>
-                      {group.matches.map((m) => (
-                        <MatchRow key={m.id} match={m} />
-                      ))}
-                    </View>
-                  </>
+                    {group.matches.map((m) => (
+                      <MatchRow key={m.id} match={m} />
+                    ))}
+                  </View>
                 )}
               </View>
             );
@@ -331,12 +329,14 @@ export default function MatchsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg.page },
   hairline: { height: 1, backgroundColor: Colors.border.subtle },
-  matchesBlock: {
+  tournamentCard: {
     backgroundColor: Colors.bg.surface,
     marginHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
     overflow: 'hidden',
-    marginBottom: Spacing.xs,
   },
   quickFilters: {
     flexDirection: 'row',
