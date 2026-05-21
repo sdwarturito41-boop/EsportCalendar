@@ -79,9 +79,15 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
         {/* Center */}
         <View style={styles.center}>
           {showScore ? (
-            <Text style={styles.score}>
-              {match.opponent1_score} – {match.opponent2_score}
-            </Text>
+            <View style={styles.scoreRow}>
+              <Text style={[styles.score, winner === 2 && styles.scoreLoser]}>
+                {match.opponent1_score}
+              </Text>
+              <Text style={[styles.score, styles.scoreSep]}>–</Text>
+              <Text style={[styles.score, winner === 1 && styles.scoreLoser]}>
+                {match.opponent2_score}
+              </Text>
+            </View>
           ) : (
             <Text style={styles.time}>{formatTime(match.begin_at)}</Text>
           )}
@@ -129,7 +135,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     marginHorizontal: 12,
-    marginBottom: 2,
+    marginBottom: 6,
   },
   cardLive: {
     borderWidth: 1,
@@ -164,12 +170,15 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     color: Colors.accent.indigo,
   },
+  scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
   score: {
     fontFamily: 'Geist-Bold',
     fontSize: 16,
     lineHeight: 18,
     color: '#F0F0F5',
   },
+  scoreSep: { color: '#6A6A78', marginHorizontal: 4 },
+  scoreLoser: { color: '#6A6A78' },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
