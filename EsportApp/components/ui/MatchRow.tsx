@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Colors, Spacing, Radii } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 import { Text } from './Text';
 import { TeamLogo } from './TeamLogo';
 
@@ -27,20 +27,17 @@ export interface MatchRowProps {
   tournamentLogo?: string | null;
 }
 
+const EWC_LOGO = require('@/assets/images/logo-jeux/ewc-logo.png');
+const isEWC = (n?: string) => !!n && (/^EWC\b/i.test(n) || /esports world cup/i.test(n));
+
 const formatTime = (iso: string): string => {
   const d = new Date(iso);
   return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
-const EWC_LOGO = require('@/assets/images/logo-jeux/ewc-logo.png');
-const isEWC = (name?: string) =>
-  !!name && (/^EWC\b/i.test(name) || /esports world cup/i.test(name));
-
 const computeAcronym = (name: string): string => {
   if (!name || name === 'TBD') return 'TBD';
-  const cleaned = name
-    .replace(/\b(Esports?|Gaming|Team|Club|Academy|Aca|Roster)\b/gi, '')
-    .trim();
+  const cleaned = name.replace(/\b(Esports?|Gaming|Team|Club|Academy|Aca|Roster)\b/gi, '').trim();
   const finalName = cleaned || name;
   const words = finalName.split(/\s+/).filter(Boolean);
   if (words.length === 1) return words[0].slice(0, 4).toUpperCase();
@@ -64,68 +61,61 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
   const ac2 = match.opponent2_acronym || computeAcronym(match.opponent2_name);
   const bo = match.best_of || 0;
 
+  const team1Color = winner === 2 ? '#6A6A78' : '#F0F0F5';
+  const team2Color = winner === 1 ? '#6A6A78' : '#F0F0F5';
+
   return (
-    <Pressable onPress={() => router.push(`/match/${match.id}`)} style={styles.card}>
+    <Pressable
+      onPress={() => router.push(`/match/${match.id}`)}
+      style={[styles.card, isLive && styles.cardLive]}
+    >
       <View style={styles.matchupRow}>
         {/* Team 1 */}
         <View style={[styles.teamSide, styles.teamLeft]}>
-          <Text variant="display.score" tone="primary" numberOfLines={1} style={styles.acronym}>
-            {ac1}
-          </Text>
-          <TeamLogo uri={match.opponent1_logo} name={match.opponent1_name} size={40} />
+          <Text numberOfLines={1} style={[styles.acronym, { color: team1Color }]}>{ac1}</Text>
+          <TeamLogo uri={match.opponent1_logo} name={match.opponent1_name} size={28} />
         </View>
 
-        {/* Center : score si joué, sinon heure */}
+        {/* Center */}
         <View style={styles.center}>
-          {showScore ? (
-            <View style={styles.scoreRow}>
-              <Text variant="display.score" tone={winner === 2 ? 'muted' : 'primary'} style={styles.bigText}>
-                {match.opponent1_score}
-              </Text>
-              <Text variant="display.score" tone="muted" style={styles.scoreSep}>–</Text>
-              <Text variant="display.score" tone={winner === 1 ? 'muted' : 'primary'} style={styles.bigText}>
-                {match.opponent2_score}
-              </Text>
+          {isLive && (
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveLabel}>LIVE</Text>
             </View>
-          ) : (
-            <Text variant="display.score" tone="primary" style={styles.bigText}>
-              {formatTime(match.begin_at)}
+          )}
+          {showScore ? (
+            <Text style={[styles.score, isLive && styles.scoreLive]}>
+              {match.opponent1_score} – {match.opponent2_score}
             </Text>
+          ) : (
+            <Text style={styles.time}>{formatTime(match.begin_at)}</Text>
           )}
         </View>
 
         {/* Team 2 */}
         <View style={[styles.teamSide, styles.teamRight]}>
-          <TeamLogo uri={match.opponent2_logo} name={match.opponent2_name} size={40} />
-          <Text variant="display.score" tone="primary" numberOfLines={1} style={styles.acronym}>
-            {ac2}
-          </Text>
+          <TeamLogo uri={match.opponent2_logo} name={match.opponent2_name} size={28} />
+          <Text numberOfLines={1} style={[styles.acronym, { color: team2Color }]}>{ac2}</Text>
         </View>
       </View>
 
-      {(tournamentName || bo > 0 || isLive) && (
+      {(tournamentName || bo > 0) && (
         <View style={styles.footer}>
           <View style={styles.footerLeft}>
-            {isLive ? (
-              <View style={styles.liveBadge}>
-                <View style={styles.liveDot} />
-                <Text variant="ui.label" tone="live" style={styles.liveLabel}>LIVE</Text>
-              </View>
-            ) : isEWC(tournamentName) ? (
+            {isEWC(tournamentName) ? (
               <Image source={EWC_LOGO} style={styles.tournamentLogo} contentFit="contain" />
             ) : tournamentLogo ? (
               <Image source={{ uri: tournamentLogo }} style={styles.tournamentLogo} contentFit="contain" />
-            ) : (
-              <View style={styles.tournamentLogoPlaceholder} />
-            )}
+            ) : null}
             {!!tournamentName && (
-              <Text variant="ui.caption" tone="muted" numberOfLines={1} style={styles.tournamentName}>
-                {tournamentName}
-              </Text>
+              <Text numberOfLines={1} style={styles.tournamentName}>{tournamentName}</Text>
             )}
           </View>
           {bo > 0 && (
-            <Text variant="ui.label" tone="muted">{`BO${bo}`}</Text>
+            <View style={styles.boBadge}>
+              <Text style={styles.boLabel}>{`BO${bo}`}</Text>
+            </View>
           )}
         </View>
       )}
@@ -135,65 +125,108 @@ export const MatchRow: React.FC<MatchRowProps> = ({ match, tournamentName, tourn
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.bg.surface,
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderRadius: Radii.lg,
-    overflow: 'hidden',
+    backgroundColor: '#141418',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginHorizontal: 12,
+    marginBottom: 2,
+  },
+  cardLive: {
+    borderWidth: 1,
+    borderColor: '#E8404A22',
   },
   matchupRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
-    minHeight: 80,
+    gap: 10,
   },
   teamSide: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: 8,
   },
   teamLeft: { justifyContent: 'flex-end' },
   teamRight: { justifyContent: 'flex-start' },
   acronym: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontFamily: 'Geist-Bold',
+    fontSize: 14,
+    lineHeight: 16,
   },
   center: {
-    minWidth: 84,
+    minWidth: 62,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
   },
-  scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
-  scoreSep: { marginHorizontal: 6, fontSize: 22 },
-  bigText: { fontSize: 26, lineHeight: 28 },
+  time: {
+    fontFamily: 'Geist-Bold',
+    fontSize: 13,
+    lineHeight: 15,
+    color: Colors.accent.indigo,
+  },
+  score: {
+    fontFamily: 'Geist-Bold',
+    fontSize: 16,
+    lineHeight: 18,
+    color: '#F0F0F5',
+  },
+  scoreLive: {
+    fontSize: 15,
+    lineHeight: 17,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginBottom: 2,
+  },
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#E8404A',
+  },
+  liveLabel: {
+    fontFamily: 'Geist-Bold',
+    fontSize: 10,
+    lineHeight: 12,
+    color: '#E8404A',
+    letterSpacing: 0.5,
+  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm + 2,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border.subtle,
-    gap: Spacing.sm,
+    marginTop: 8,
+    gap: 8,
   },
   footerLeft: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 5,
   },
-  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.semantic.live },
-  liveLabel: { fontSize: 10, letterSpacing: 1.5 },
-  tournamentLogo: { width: 16, height: 16 },
-  tournamentLogoPlaceholder: {
-    width: 16,
-    height: 16,
-    borderRadius: Radii.sm,
-    backgroundColor: Colors.border.subtle,
+  tournamentLogo: { width: 12, height: 12 },
+  tournamentName: {
+    flex: 1,
+    fontFamily: 'Geist-Medium',
+    fontSize: 9,
+    lineHeight: 11,
+    color: '#3A3A44',
+    letterSpacing: 0.3,
   },
-  tournamentName: { flex: 1 },
+  boBadge: {
+    backgroundColor: '#1C1C20',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  boLabel: {
+    fontFamily: 'Geist-Bold',
+    fontSize: 9,
+    lineHeight: 11,
+    color: '#6A6A78',
+    letterSpacing: 0.5,
+  },
 });

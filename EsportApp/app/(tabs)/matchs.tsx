@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
+    paddingTop: 10,
     paddingBottom: Spacing.xs,
   },
   gameLabel: { flex: 1, fontSize: 22, letterSpacing: 2 },
