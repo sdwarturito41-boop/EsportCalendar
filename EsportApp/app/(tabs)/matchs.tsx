@@ -165,12 +165,12 @@ export default function MatchsScreen() {
         grouped[key].push(m);
       });
 
-      const statusRank: Record<string, number> = { running: 0, not_started: 1, finished: 2 };
+      // LIVE en premier, puis tout le reste (finis + à venir) en ordre
+      // chronologique strict (heure de match croissante).
       const sortMatches = (arr: Match[]) =>
         [...arr].sort((a, b) => {
-          const sa = statusRank[a.status] ?? 3;
-          const sb = statusRank[b.status] ?? 3;
-          if (sa !== sb) return sa - sb;
+          if (a.status === 'running' && b.status !== 'running') return -1;
+          if (b.status === 'running' && a.status !== 'running') return 1;
           return new Date(a.begin_at).getTime() - new Date(b.begin_at).getTime();
         });
       const sorted = Object.entries(grouped)
